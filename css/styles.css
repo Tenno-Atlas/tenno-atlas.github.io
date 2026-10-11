@@ -52,7 +52,7 @@ body { background: var(--bg); -webkit-font-smoothing: antialiased; text-renderin
 .loading { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; color: var(--dim); font: 400 13px "Roboto Condensed", sans-serif; letter-spacing: 0.2em; text-transform: uppercase; background: var(--bg); }
 
 .wf-panel {
-  position: fixed; z-index: 30; top: calc(var(--top) + 4px); bottom: 64px; width: 330px;
+  position: fixed; z-index: 30; top: calc(var(--top) + 4px); bottom: 16px; width: 330px;
   display: flex; flex-direction: column; min-height: 0;
   background: var(--panel); border: 1px solid var(--edge); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
@@ -120,20 +120,18 @@ body { background: var(--bg); -webkit-font-smoothing: antialiased; text-renderin
 @media (min-width: 1024px) { .planet-hud { max-width: calc(100vw - 760px); } }
 @media (max-width: 767px) { .ph-name { font-size: 22px; } }
 
-.hud-bottom { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 16px; pointer-events: none; background: linear-gradient(to top, rgba(2, 3, 10, 0.85), rgba(2, 3, 10, 0)); }
-.hud-bottom > * { pointer-events: auto; }
-.legend { display: flex; gap: 16px; align-items: center; font: 400 11px "Roboto Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
-.legend > span { align-items: center; gap: 6px; white-space: nowrap; }
-.legend > span:not(.hidden) { display: inline-flex; }
-@media (min-width: 768px) { .legend > span.hidden { display: inline-flex; } }
-.lg-dot { width: 9px; height: 9px; transform: rotate(45deg); display: inline-block; }
+.legend { display: none; gap: 16px; align-items: center; font: 400 11px "Roboto Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); min-width: 0; }
+.legend > span { align-items: center; gap: 6px; white-space: nowrap; display: inline-flex; min-width: 0; }
+.lg-dot { width: 9px; height: 9px; transform: rotate(45deg); display: inline-block; flex-shrink: 0; }
 .lg-dot.gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
 .lg-dot.cyan { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
-.zoom { display: flex; gap: 4px; margin-left: auto; }
+.controls-hint { display: none; }
+@media (min-width: 1024px) { .legend { display: flex; } }
+@media (min-width: 1500px) { .controls-hint { display: inline; margin-right: 12px; } }
+
+.zoom { position: fixed; z-index: 30; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 4px; }
 .zoom .wf-btn { width: 34px; padding: 5px 0; font-size: 15px; letter-spacing: 0; }
-.foot { font: 400 10px "Roboto Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(138, 154, 166, 0.7); }
-@media (min-width: 1024px) { .hud-bottom { padding-left: 362px; padding-right: 382px; } }
-@media (max-width: 1799px) { .foot { display: none; } }
+@media (min-width: 1024px) { .zoom { right: 382px; } }
 
 .pl-label {
   position: absolute; left: 0; top: 0; pointer-events: auto; display: block; width: 0; height: 0;
@@ -195,7 +193,7 @@ body:not(.in-planet) .node-mk { display: none; }
 .map-tip .tip-foot { margin-top: 9px; color: var(--dim); font-size: 11px; }
 @media (hover: none) { .map-tip { display: none !important; } }
 
-.toast { position: fixed; z-index: 70; bottom: 70px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--gold); padding: 8px 16px; font: 500 12px "Roboto Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
+.toast { position: fixed; z-index: 70; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--gold); padding: 8px 16px; font: 500 12px "Roboto Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
 
 .wf-scroll::-webkit-scrollbar { width: 6px; }
 .wf-scroll::-webkit-scrollbar-track { background: transparent; }

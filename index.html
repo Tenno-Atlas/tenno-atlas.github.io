@@ -65,7 +65,13 @@
       </template>
     </nav>
 
+    <div class="legend" x-show="$store.wf.loaded">
+      <span x-show="$store.wf.planHits.size"><i class="lg-dot gold"></i><span x-text="$store.wf.t('your')"></span></span>
+      <span x-show="$store.wf.focus" class="max-w-[220px]"><i class="lg-dot cyan"></i><span class="truncate" x-text="$store.wf.focus"></span></span>
+    </div>
+
     <div class="flex items-center gap-2 ml-auto">
+      <span class="controls-hint hud-meta" x-text="$store.wf.t('controls')"></span>
       <span class="hidden md:inline hud-meta" x-show="$store.wf.loaded" x-text="$store.wf.t('data_sync') + ' ' + $store.wf.dateStr()"></span>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('left')" :class="$store.wf.panel==='left' && 'on'" x-text="$store.wf.t('planner_short')"></button>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('right')" :class="$store.wf.panel==='right' && 'on'" x-text="$store.wf.t('search_short')"></button>
@@ -231,18 +237,10 @@
     </div>
   </aside>
 
-  <div class="hud-bottom" x-show="$store.wf.loaded" x-cloak>
-    <div class="legend">
-      <span x-show="$store.wf.planHits.size"><i class="lg-dot gold"></i><span x-text="$store.wf.t('your')"></span></span>
-      <span x-show="$store.wf.focus"><i class="lg-dot cyan"></i><span x-text="$store.wf.focus"></span></span>
-      <span class="hidden md:inline" x-text="$store.wf.t('controls')"></span>
-    </div>
-    <div class="zoom">
-      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: 1 }))" aria-label="Zoom in">+</button>
-      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: -1 }))" aria-label="Zoom out">−</button>
-      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:home'))" :aria-label="$store.wf.t('origin')">⌂</button>
-    </div>
-    <span class="foot" x-text="$store.wf.t('footer')"></span>
+  <div class="zoom" x-show="$store.wf.loaded" x-cloak>
+    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: 1 }))" aria-label="Zoom in">+</button>
+    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: -1 }))" aria-label="Zoom out">−</button>
+    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:home'))" :aria-label="$store.wf.t('origin')">⌂</button>
   </div>
 
   <div x-show="$store.wf.tip.show" x-cloak class="map-tip" :style="'left:' + $store.wf.tip.x + 'px;top:' + $store.wf.tip.y + 'px'" x-html="$store.wf.tip.html"></div>
