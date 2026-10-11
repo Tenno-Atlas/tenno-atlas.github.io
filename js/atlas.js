@@ -85,7 +85,7 @@
   document.addEventListener('alpine:init', () => {
     window.Alpine.store('wf', {
       loaded: false, error: '', toast: '',
-      lang: lsGet('wf_lang') === 'ru' ? 'ru' : (lsGet('wf_lang') === 'en' ? 'en' : ((navigator.language || '').startsWith('ru') ? 'ru' : 'en')),
+      lang: lsGet('wf_lang') === 'ru' ? 'ru' : 'en', // по умолчанию EN
       A: { items: [], nodes: [], planets: {}, cdn: '' }, P: { items: [], relics: [] },
       generatedAt: null, loadedAt: 0,
       tab: 'prime', filter: '', open: {},
