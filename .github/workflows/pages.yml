@@ -1,9 +1,5 @@
 name: Публикация сайта (GitHub Pages)
 
-# Публикует сайт при каждом пуше в main и после ежедневного обновления дропа.
-# (Коммит бота с GITHUB_TOKEN не запускает push-воркфлоу, поэтому нужен workflow_run.)
-# Разовая настройка: Settings → Pages → Source: GitHub Actions.
-
 on:
   push:
     branches: [main]
@@ -31,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main   # после workflow_run берём свежий коммит с данными, а не старый SHA
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
@@ -40,7 +36,6 @@ jobs:
       - name: Проверить данные
         run: node tools/test-atlas.cjs
 
-      # Публикуем только то, что нужно странице.
       - name: Собрать _site
         run: |
           mkdir _site

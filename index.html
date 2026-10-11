@@ -16,7 +16,6 @@
 
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
-    // Палитра Oraxia: «кровь и кость» — тёплый тёмный фон, кремовый текст, малиновый акцент.
     tailwind.config = {
       theme: {
         extend: {
@@ -37,7 +36,6 @@
 </head>
 <body x-data class="bg-ink text-txt font-sans selection:bg-haz selection:text-bone">
 
-  <!-- ============ ШАПКА ============ -->
   <header class="h-[52px] border-b border-line bg-ink/95 backdrop-blur flex items-center gap-4 px-4 sticky top-0 z-40">
     <div class="flex items-baseline gap-3 min-w-0">
       <span class="font-extrabold tracking-[0.28em] text-[15px] whitespace-nowrap">TENNO <span class="text-hot">ATLAS</span></span>
@@ -58,10 +56,8 @@
     <span x-show="$store.wf.error" class="text-hot" x-text="$store.wf.t('data_error') + ': ' + $store.wf.error"></span>
   </div>
 
-  <!-- ============ ОДНА СТРАНИЦА: планировщик | карта | поиск ============ -->
   <main x-show="$store.wf.loaded" x-cloak class="atlas-grid">
 
-    <!-- ---------- ЛЕВО: планировщик ---------- -->
     <aside class="pane border-r border-line">
       <div class="p-4 pb-3 space-y-3 border-b border-line">
         <div class="flex items-center justify-between">
@@ -77,7 +73,6 @@
           class="w-full bg-panel border border-line px-3 py-1.5 text-sm placeholder:text-dim/60 focus:outline-none focus:border-haz" />
       </div>
 
-      <!-- список предметов -->
       <div class="flex-1 min-h-0 overflow-y-auto">
         <template x-for="item in $store.wf.plannerList()" :key="item.pre + item.name">
           <div class="border-b border-line/60">
@@ -102,7 +97,6 @@
         <div x-show="!$store.wf.plannerList().length" class="p-4 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
       </div>
 
-      <!-- лучшие места -->
       <div class="border-t border-line max-h-[42%] flex flex-col min-h-0">
         <div class="px-4 pt-3 pb-2">
           <div class="flex items-baseline justify-between">
@@ -127,22 +121,19 @@
       </div>
     </aside>
 
-    <!-- ---------- ЦЕНТР: карта ---------- -->
     <section id="map-pane" class="pane relative overflow-hidden bg-[#08060a]" :class="$store.wf.view && 'has-view'">
-      <!-- вся система -->
+
       <div x-show="!$store.wf.view" class="absolute inset-0 flex items-center justify-center"
            x-html="$store.wf.mapHtml"
            @mousemove="$store.wf.mapOver($event)" @mouseleave="$store.wf.mapLeave()"
            @click="$store.wf.mapClick($event)" @keydown="$store.wf.mapKey($event)"></div>
 
-      <!-- легенда -->
       <div x-show="!$store.wf.view" class="absolute left-3 bottom-3 text-[11px] text-dim space-y-1 pointer-events-none">
         <div x-show="$store.wf.planHits.size" class="flex items-center gap-2"><i class="legend-dot border-hot"></i><span x-text="$store.wf.t('your')"></span></div>
         <div x-show="$store.wf.focus" class="flex items-center gap-2"><i class="legend-dot border-gold border-dashed"></i><span x-text="$store.wf.focus"></span></div>
         <div x-text="$store.wf.t('click_hint')"></div>
       </div>
 
-      <!-- одна планета: её узлы -->
       <template x-if="$store.wf.view">
         <div class="absolute inset-0 flex flex-col">
           <div class="planet-head" :style="'--pc:' + ($store.wf.layout().find(p => p.name === $store.wf.view) || {}).color">
@@ -181,9 +172,8 @@
       </template>
     </section>
 
-    <!-- ---------- ПРАВО: поиск и детали узла ---------- -->
     <aside id="details" class="pane border-l border-line">
-      <!-- раскрытый узел -->
+
       <template x-if="$store.wf.pinnedNode()">
         <div class="flex flex-col min-h-0 flex-1">
           <div class="p-4 pb-2 border-b border-line flex items-start gap-2">
@@ -214,7 +204,6 @@
         </div>
       </template>
 
-      <!-- поиск -->
       <div x-show="!$store.wf.pinnedNode()" class="flex flex-col min-h-0 flex-1">
         <div class="p-4 pb-3 space-y-2 border-b border-line">
           <h2 class="text-[11px] font-mono tracking-[0.2em] uppercase text-gold" x-text="$store.wf.t('search')"></h2>
@@ -223,7 +212,6 @@
           <p x-show="$store.wf.q.length < 2 && !$store.wf.focus" class="text-[11px] text-dim" x-text="$store.wf.t('search_hint')"></p>
         </div>
 
-        <!-- результаты -->
         <div x-show="$store.wf.q.length >= 2" class="overflow-y-auto min-h-0 max-h-[45%] border-b border-line">
           <template x-for="e in $store.wf.results()" :key="e.kind + e.name">
             <button @click="$store.wf.pick(e)" class="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-panel"
@@ -238,7 +226,6 @@
           <div x-show="!$store.wf.results().length" class="p-3 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
         </div>
 
-        <!-- где падает выбранное -->
         <div x-show="$store.wf.focus" class="overflow-y-auto min-h-0 flex-1">
           <div class="px-4 pt-3 pb-1 flex items-baseline justify-between gap-2">
             <h3 class="text-sm font-bold text-gold truncate" x-text="$store.wf.focus"></h3>
@@ -271,9 +258,8 @@
     <span class="ml-auto">© Digital Extremes Ltd.</span>
   </footer>
 
-  <!-- тултип карты -->
   <div x-show="$store.wf.tip.show" x-cloak class="map-tip" :style="'left:' + $store.wf.tip.x + 'px;top:' + $store.wf.tip.y + 'px'" x-html="$store.wf.tip.html"></div>
-  <!-- уведомление об обновлении данных -->
+
   <div x-show="$store.wf.toast" x-cloak x-transition class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-panel2 border border-haz px-4 py-2 text-sm" x-text="$store.wf.toast"></div>
 
   <script src="js/atlas.js"></script>

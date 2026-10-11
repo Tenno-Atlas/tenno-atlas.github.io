@@ -1,16 +1,3 @@
-// Сборщик данных для WFRELICS.
-// ИСТОЧНИК ИСТИНЫ — официальный droptable Digital Extremes (warframe.com/droptables).
-// Это тот же источник, что у вики: он обновляется в день патча, поэтому новые
-// праймы и ротации волта появляются на сайте сразу, без задержки community-зеркал.
-//
-// Из droptable берём: содержимое реликвий, шансы по рефайнам, ранги наград,
-// доступность (реликвия доступна, если реально падает в миссии/бонусе) и все локации.
-// warframestat нужен только для категории оружия (Primary/Secondary/Melee/...),
-// и используется как best-effort обогащение с кэшем — если упадёт, сборка не ломается.
-//
-// Запуск:  node tools/build-data.mjs
-// Требуется Node 18+ (глобальный fetch).
-
 import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -18,11 +5,10 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(__dirname, '..', 'data');
 const OUT_FILE = join(OUT_DIR, 'primes.json');
-// Коммитимый запас категорий: последняя известная категория каждого предмета.
-// Нужен, если warframestat недоступен в момент сборки (в CI локального кэша нет).
+
 const CAT_FILE = join(OUT_DIR, 'categories.json');
 const ATLAS_FILE = join(OUT_DIR, 'atlas.json');
-// Коммитимый запас иконок (имя -> imageName на CDN), как и категории.
+
 const IMG_FILE = join(OUT_DIR, 'images.json');
 const CACHE_DIR =join(__dirname, '..', '.cache');
 const HTML_CACHE = join(CACHE_DIR, 'droptable.html');
@@ -34,10 +20,8 @@ const ITEMS_URL = 'https://api.warframestat.us/items/?language=en&only=name,isPr
 const STATES = ['Intact', 'Exceptional', 'Flawless', 'Radiant'];
 const CDN = 'https://cdn.warframestat.us/img/';
 
-// Источники, не нужные в планировщике фарма: PvP и ограниченные по времени ивенты.
 const EXCLUDE_LOCATION = /faceoff|conclave|lunaro|plague star|ghoul|hemocyte/i;
 
-// --- сетевой слой: retry + экспоненциальный backoff + fallback на кэш ---
 async function fetchWithRetry(url, { json, cacheFile, maxRetries = 3 } = {}) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -64,7 +48,7 @@ async function fetchWithRetry(url, { json, cacheFile, maxRetries = 3 } = {}) {
             console.log(`⚠ Все попытки не удались. Беру кэш ${cacheFile}...`);
             const text = await readFile(cacheFile, 'utf8');
             return json ? JSON.parse(text) : text;
-          } catch { /* кэша нет — пробрасываем исходную ошибку */ }
+          } catch {  }
         }
         throw err;
       }
@@ -75,8 +59,6 @@ async function fetchWithRetry(url, { json, cacheFile, maxRetries = 3 } = {}) {
   }
 }
 
-// --- разбор предмета/прайма ---
-// owner: "Akbronco Prime Link" -> "Akbronco Prime"; "Dual Zoren Prime Blade" -> "Dual Zoren Prime"
 function ownerOf(name) {
   const i = name.indexOf(' Prime');
   if (i < 0) return null;
@@ -92,10 +74,9 @@ function categoryFromWarframestat(i) {
   if (i.productCategory === 'SentinelWeapons') return 'SentinelWeapon';
   if (i.category === 'Warframes') return 'Warframe';
   if (i.category === 'Sentinels') return 'Sentinel';
-  return i.category; // Primary, Secondary, Melee, Archwing
+  return i.category;
 }
 
-// "Mercury/Apollodorus (Survival)" -> {planet, node, type}
 function parseHeader(h) {
   let planet = null, place = h.trim();
   const slash = place.indexOf('/');
@@ -113,7 +94,6 @@ function sectionBetween(html, startId, endId) {
   return html.slice(s, e < 0 ? html.length : e);
 }
 
-// Содержимое реликвий: relicId -> { tier, code, rewards: Map(item -> {item, rarity, chances}) }
 function parseRelicContents(html) {
   const sec = sectionBetween(html, 'relicRewards', 'keyRewards');
   const map = new Map();
@@ -138,10 +118,8 @@ function parseRelicContents(html) {
   return map;
 }
 
-// Где какие реликвии падают: relicId -> Map(locKey -> {planet,node,type,rotation,chance})
-// Источник доступности: реликвия доступна, если встречается в миссиях/бонусах.
 function parseRelicDrops(html) {
-  // Все секции-источники дропа, кроме relicRewards (там в строках — детали, а не реликвии).
+
   const slices = [
     sectionBetween(html, 'missionRewards', 'relicRewards'),
     sectionBetween(html, 'keyRewards', 'modByAvatar'),
@@ -154,16 +132,15 @@ function parseRelicDrops(html) {
     const th = row.match(/<th[^>]*>(.*?)<\/th>/);
     if (th) {
       const t = th[1].trim();
-      // Заголовки бонусов со стадиями идут в строке с pad-cell — это подзаголовок-стадия,
-      // её игнорируем, сохраняя регион (loc) и ротацию A/B/C (как в прежних данных).
+
       const isStage = /pad-cell/.test(row);
       if (/^Rotation\b/i.test(t)) rot = t.replace(/^Rotation\s+/i, '');
-      else if (isStage) { /* стадия бонуса — пропускаем */ }
+      else if (isStage) {  }
       else { loc = t; rot = null; }
       continue;
     }
     if (!loc) continue;
-    // Непустые ячейки строки: для миссий их 2 (награда, шанс), для бонусов 3 (pad, награда, шанс).
+
     const cells = [...row.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((c) => c[1].trim()).filter(Boolean);
     if (cells.length < 2) continue;
     const rm = cells[0].match(/^([A-Za-z]+) ([A-Za-z]?\d+) Relic$/);
@@ -182,9 +159,6 @@ function parseRelicDrops(html) {
   return drops;
 }
 
-// ======================= КАРТА (Tenno Atlas) =======================
-// Базовые ресурсы планет: их нет в droptable (падают с врагов/ящиков), но они
-// не меняются годами — задаём таблицей (по вики / внутриигровой звёздной карте).
 const PLANET_RESOURCES = {
   Mercury: ['Ferrite', 'Polymer Bundle', 'Morphics', 'Detonite Ampule'],
   Venus: ['Alloy Plate', 'Polymer Bundle', 'Circuits', 'Fieldron Sample'],
@@ -206,7 +180,6 @@ const PLANET_RESOURCES = {
   'Kuva Fortress': ['Salvage', 'Circuits', 'Neural Sensors', 'Detonite Ampule'],
 };
 
-// Открытые миры/хабы: секции наград баунти -> планета, на которой стоят на карте.
 const BOUNTY_SECTIONS = [
   ['cetusRewards', 'solarisRewards', 'Earth'],
   ['solarisRewards', 'deimosRewards', 'Venus'],
@@ -217,14 +190,12 @@ const BOUNTY_SECTIONS = [
 ];
 
 const RELIC_NAME = /^(Lith|Meso|Neo|Axi|Requiem) \S+ Relic( \(\w+\))?$/;
-// "240X Polymer Bundle", "400 Endo", "2,500 Credits Cache" (но не "3 Day Affinity Booster")
+
 const QTY = /^(\d[\d,]*)(X)? (.+)$/;
 const hasQty = (q) => q && (q[2] || /Endo$|Credits Cache$/.test(q[3]));
 const FRAME_COMP = /^(.+?) (Neuroptics|Chassis|Systems)( Blueprint)?$/;
 const GEAR_PART = /(Blueprint|Barrel|Receiver|Stock|Blade|Blades|Handle|Hilt|Link|Grip|String|Limb|Guard|Gauntlet|Pouch|Head|Disc|Chain|Ornament|Boot|Heatsink|Motor|Subcortex|Casing|Core|Capsule|Engine|Avionics)$/;
 
-// Строки таблицы droptable -> [{loc, rot, item, chance}]. Подзаголовки-стадии баунти
-// (pad-cell) не сбрасывают локацию; для одинаковых предметов берём максимальный шанс.
 function walkTable(sec, onRow) {
   const rowRe = /<tr[^>]*>(.*?)<\/tr>/gs;
   let loc = null, rot = null, m;
@@ -247,7 +218,7 @@ function walkTable(sec, onRow) {
 }
 
 function planetOfHeader(loc) {
-  // "Earth/Korm's Belt (Skirmish) Extra" — доп. таблица того же узла Railjack
+
   const extra = / Extra$/.test(loc);
   const h = parseHeader(loc.replace(/ Extra$/, ''));
   const { planet, type } = h;
@@ -256,14 +227,14 @@ function planetOfHeader(loc) {
     if (/^Recall: Ten-Zero/i.test(loc)) return { planet: 'Zariman', node: loc, type: 'Recall' };
     return null;
   }
-  if (/^Event:/i.test(planet)) return null; // ивенты временные — не на карте
-  const p = planet.replace(/^.*,\s*/, ''); // "Dark Refractory, Deimos" -> Deimos
+  if (/^Event:/i.test(planet)) return null;
+  const p = planet.replace(/^.*,\s*/, '');
   return { planet: p, node, type };
 }
 
 function parseNodes(html, resourceNames) {
-  const nodes = new Map(); // key -> {p, n, t, r: {rot: Map(item -> {chance, qty})}}
-  // ресурсы = то, что выдаётся пачкой («240X …»), + базовые ресурсы планет + категория warframestat
+  const nodes = new Map();
+
   const qtyNames = new Set(Object.values(PLANET_RESOURCES).flat());
   const add = (planet, node, type, rot, raw, chance) => {
     const key = planet + '|' + node;
@@ -289,11 +260,9 @@ function parseNodes(html, resourceNames) {
     });
   }
 
-  // Классификация предметов.
   const names = new Set();
   for (const nd of nodes.values()) for (const b of Object.values(nd.r)) for (const n of b.keys()) names.add(n);
-  // Варфрейм = владелец, у которого встречается минимум 2 разных компонента
-  // (отсекает моды «Gyromag Systems» и оружие вроде «Spectra Vandal Chassis»).
+
   const comps = new Map();
   for (const n of names) { const f = n.match(FRAME_COMP); if (f) comps.set(f[1], (comps.get(f[1]) || new Set()).add(f[2])); }
   const frameOwners = new Set([...comps].filter(([, c]) => c.size >= 2).map(([o]) => o));
@@ -331,10 +300,6 @@ async function main() {
   console.log('Загружаю официальный droptable Digital Extremes...');
   const html = await fetchWithRetry(DROPTABLE_URL, { cacheFile: HTML_CACHE });
 
-  // Категории оружия — best-effort из warframestat. Несколько источников по надёжности:
-  //  catMap     — по точному имени прайма (warframestat, если уже добавил прайм);
-  //  baseCatMap — по базовому оружию (для новых праймов: базовая версия есть давно);
-  //  savedCat   — коммитнутый запас прошлой удачной сборки (страховка, если API лежит).
   const catMap = new Map();
   const baseCatMap = new Map();
   const savedCat = new Map();
@@ -344,11 +309,11 @@ async function main() {
   try {
     const saved = JSON.parse(await readFile(IMG_FILE, 'utf8'));
     for (const [k, v] of Object.entries(saved)) savedImg.set(k, v);
-  } catch { /* запаса иконок ещё нет */ }
+  } catch {  }
   try {
     const saved = JSON.parse(await readFile(CAT_FILE, 'utf8'));
     for (const [k, v] of Object.entries(saved)) savedCat.set(k, v);
-  } catch { /* запаса ещё нет — не страшно */ }
+  } catch {  }
   try {
     console.log('Загружаю категории из warframestat (обогащение)...');
     const items = await fetchWithRetry(ITEMS_URL, { json: true, cacheFile: ITEMS_CACHE });
@@ -369,13 +334,12 @@ async function main() {
 
   const order = { Rare: 0, Uncommon: 1, Common: 2 };
   const relics = [];
-  const partDrops = new Map();        // partName -> [{relic, tier, rarity, chances}]
-  const availOwners = new Set();       // праймы, чьи детали реально доступны
+  const partDrops = new Map();
+  const availOwners = new Set();
 
-  // Реликвия попадает на сайт, только если реально падает (есть в relicDrops).
   for (const [id, content] of [...relicContents].sort((a, b) => a[0].localeCompare(b[0]))) {
     const byLoc = relicDrops.get(id);
-    if (!byLoc) continue; // ваултнутая — пропускаем
+    if (!byLoc) continue;
     const rewards = [...content.rewards.values()];
     rewards.sort((a, b) => order[a.rarity] - order[b.rarity] || a.item.localeCompare(b.item));
 
@@ -399,7 +363,6 @@ async function main() {
     });
   }
 
-  // Собираем предметы из доступных праймов.
   const items = [...availOwners].map((name) => {
     const parts = [];
     for (const [partName, drops] of partDrops) {
@@ -416,7 +379,6 @@ async function main() {
     .filter((it) => it.parts.length > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Защита: если парсинг дал явно мусорный результат — не перезаписываем живые данные.
   if (relics.length < 20 || items.length < 8) {
     throw new Error(`Подозрительно мало данных (реликвий ${relics.length}, предметов ${items.length}) — прерываю, чтобы не сломать сайт.`);
   }
@@ -433,18 +395,15 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   await writeFile(OUT_FILE, JSON.stringify(out));
 
-  // Обновляем коммитнутый запас категорий: запоминаем то, что определилось,
-  // плюс сохраняем прежние записи (чтобы запас не худел при разовом сбое API).
   const cats = Object.fromEntries(savedCat);
   for (const it of items) if (it.category) cats[it.name] = it.category;
   await writeFile(CAT_FILE, JSON.stringify(cats, null, 2) + '\n');
 
-  // --- Карта ---
   const atlas = parseNodes(html, resourceNames);
   if (atlas.nodes.length < 300) {
     throw new Error(`Подозрительно мало узлов карты (${atlas.nodes.length}) — прерываю.`);
   }
-  // Иконки: imageName из warframestat (+ коммитнутый запас, если API лежит).
+
   const imgs = Object.fromEntries(savedImg);
   for (const [k, v] of imageMap) imgs[k] = v;
   const wanted = new Set();

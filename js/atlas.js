@@ -1,6 +1,3 @@
-// Tenno Atlas — состояние страницы (Alpine store) и отрисовка звёздной карты.
-// Данные: data/atlas.json (что падает на каждом узле) + data/primes.json (реликвии и праймы).
-// Названия предметов — как в игре (EN); переводится интерфейс, планеты и типы миссий.
 (function () {
   'use strict';
 
@@ -55,7 +52,6 @@
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
   };
 
-  // Звёздная карта: координаты в viewBox 1000×640 (по мотивам внутриигровой карты).
   const LAYOUT = [
     ['Sedna', 470, 70, 15, '#c7b3a1'], ['Phobos', 625, 120, 11, '#9c8576'], ['Veil Proxima', 880, 95, 12, '#6f86c9'],
     ['Höllvania', 120, 95, 13, '#c45a7c'], ['Kuva Fortress', 285, 185, 13, '#b8323e'], ['Ceres', 420, 170, 12, '#8a8f99'],
@@ -77,7 +73,6 @@
   const relicBase = (n) => n.replace(/ Relic.*$/, '');
   const round = (n) => Math.round(n * 100) / 100;
 
-  // Звёзды фона — фиксированный псевдослучайный набор (без мерцания при перерисовке).
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const STARS = Array.from({ length: 170 }, () => `<circle cx="${(rnd() * 1000).toFixed(1)}" cy="${(rnd() * 640).toFixed(1)}" r="${(rnd() * 1.1 + 0.2).toFixed(2)}" opacity="${(rnd() * 0.6 + 0.15).toFixed(2)}"/>`).join('');
@@ -85,16 +80,16 @@
   document.addEventListener('alpine:init', () => {
     window.Alpine.store('wf', {
       loaded: false, error: '', toast: '',
-      lang: lsGet('wf_lang') === 'ru' ? 'ru' : 'en', // по умолчанию EN
+      lang: lsGet('wf_lang') === 'ru' ? 'ru' : 'en',
       A: { items: [], nodes: [], planets: {}, cdn: '' }, P: { items: [], relics: [] },
       generatedAt: null, loadedAt: 0,
       tab: 'prime', filter: '', open: {},
       sel: safe(() => JSON.parse(lsGet('wf_atlas_sel')) || {}, {}),
-      q: '', focus: null,         // фокус поиска: имя предмета
-      view: null,                 // открытая планета или null (вся карта)
-      pinned: null,               // ключ узла, раскрытого справа
+      q: '', focus: null,
+      view: null,
+      pinned: null,
       tip: { show: false, x: 0, y: 0, html: '' },
-      // вычисляемое (пересчитывается явно, чтобы карта не перерисовывалась на каждый чих)
+
       planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, mapHtml: '',
 
       async load(silent) {
@@ -115,18 +110,16 @@
           if (!silent) this.error = String((e && e.message) || e);
         }
       },
-      // Сайт открыт долго (вкладка висит днями) — подтягиваем свежий дроп при возвращении.
+
       refreshIfStale() { if (this.loaded && Date.now() - this.loadedAt > 30 * 60 * 1000) this.load(true); },
       flash(msg) { this.toast = msg; setTimeout(() => { this.toast = ''; }, 3500); },
 
-      // ---------- i18n ----------
       t(k) { const d = I18N[this.lang]; return d[k] != null ? d[k] : I18N.en[k] != null ? I18N.en[k] : k; },
       kindName(k) { return (I18N[this.lang].kind || {})[k] || k; },
       planetName(p) { return this.lang === 'ru' ? (PLANET_RU[p] || p) : p; },
       typeName(t) { return !t ? '' : this.lang === 'ru' ? (TYPE_RU[t] || t) : t; },
       toggleLang() { this.lang = this.lang === 'en' ? 'ru' : 'en'; lsSet('wf_lang', this.lang); this.renderMap(); },
 
-      // ---------- утилиты ----------
       img(name) { return name ? this.A.cdn + encodeURIComponent(name) : ''; },
       itemImg(it) {
         if (it.kind === 'relic') return this.img('Relic' + it.name.split(' ')[0] + 'D.png');
@@ -137,8 +130,6 @@
       dateStr() { return this.generatedAt ? new Date(this.generatedAt).toLocaleDateString(this.lang === 'ru' ? 'ru-RU' : 'en-GB') : ''; },
       layout() { return LAYOUT; },
 
-      // ---------- планировщик ----------
-      // Обычные варфреймы: группируем части по владельцу (Rhino -> BP/Neuroptics/Chassis/Systems).
       buildFrames() {
         const map = new Map();
         this.A.items.forEach((it) => {
@@ -177,9 +168,8 @@
       saveSel() { lsSet('wf_atlas_sel', JSON.stringify(this.sel)); this.recalc(); },
       get selList() { return Object.keys(this.sel).filter((k) => this.sel[k]).map((k) => ({ key: k, name: k.slice(2) })); },
 
-      // ---------- расчёт подсветки ----------
       recalc() {
-        // нужные реликвии: реликвия -> какие из выбранных прайм-деталей в ней лежат
+
         const wantRelic = new Map();
         for (const r of this.P.relics || []) {
           const parts = r.rewards.filter((rw) => this.sel['p:' + rw.item]).map((rw) => ({ name: rw.item, chance: rw.chances.Intact }));
@@ -218,7 +208,6 @@
         return out;
       },
 
-      // ---------- поиск дропа ----------
       searchIndex() {
         if (this._idx) return this._idx;
         const seen = new Map();
@@ -243,7 +232,7 @@
         this.focus = name;
         const hits = new Map(); const planets = {};
         if (name) {
-          // прайм-деталь ищем через реликвии, остальное — напрямую по таблицам узлов
+
           const relics = new Set((this.P.relics || []).filter((r) => r.rewards.some((rw) => rw.item === name)).map((r) => r.id));
           for (const nd of this.A.nodes) {
             let best = null;
@@ -266,7 +255,6 @@
       focusList() { return [...this.findHits.values()].sort((a, b) => b.eff - a.eff).slice(0, 60); },
       focusResPlanets() { return Object.keys(this.findPlanets); },
 
-      // ---------- навигация по карте ----------
       openPlanet(p, nodeKey) {
         this.view = p; this.hideTip();
         if (nodeKey) this.pinned = nodeKey;
@@ -275,7 +263,7 @@
       },
       pin(key) {
         this.pinned = key; this.hideTip();
-        // на телефоне детали узла — ниже карты, прокручиваем к ним
+
         if (window.innerWidth < 1024) setTimeout(() => { const el = document.getElementById('details'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
       },
       closePlanet() { this.view = null; this.hideTip(); },
@@ -296,7 +284,7 @@
         return { nodes: nodes.length, frames: [...frames].sort(), tiers: ['Lith', 'Meso', 'Neo', 'Axi', 'Requiem'].filter((t) => tiers[t]), res: this.A.planets[p] || [] };
       },
       nodeGroups(nd, limit) {
-        // ротация -> предметы, сгруппированные по виду
+
         return Object.entries(nd.r).map(([rot, drops]) => {
           const rows = drops.map(([i, ch, qty]) => ({ it: this.A.items[i], ch, qty }))
             .sort((a, b) => KIND_ORDER.indexOf(a.it.kind) - KIND_ORDER.indexOf(b.it.kind) || b.ch - a.ch);
@@ -309,7 +297,6 @@
         return (h && h.lines.some((l) => l.name === it.name)) || (f && (it.name === this.focus || f.via === it.name));
       },
 
-      // ---------- тултипы ----------
       showTip(ev, html) { this.tip = { show: true, html, ...this.tipPos(ev) }; },
       moveTip(ev) { if (this.tip.show) Object.assign(this.tip, this.tipPos(ev)); },
       hideTip() { this.tip.show = false; },
@@ -349,7 +336,6 @@
         return h;
       },
 
-      // ---------- SVG звёздной карты ----------
       renderMap() {
         const orbits = [70, 130, 195, 265, 340, 420].map((r) => `<ellipse cx="500" cy="330" rx="${r * 1.25}" ry="${r * 0.72}" class="orbit"/>`).join('');
         let planets = '';

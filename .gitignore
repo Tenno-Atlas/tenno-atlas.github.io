@@ -7,3 +7,4 @@ package-lock.json
 Thumbs.db
 *.log
 .cache/
+CLAUDE.md
