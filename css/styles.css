@@ -1,23 +1,96 @@
-/* WFRELICS — минимализм, палитра Oraxia («кровь и кость»). Основной стиль — Tailwind. */
+/* Tenno Atlas — палитра Oraxia («кровь и кость»). Основной стиль — Tailwind. */
 
-/* Прямые углы. */
 * { border-radius: 0 !important; }
+[x-cloak] { display: none !important; }
 
 html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-body { background: #0d0a0b; }
+body { background: #0d0a0b; min-height: 100vh; display: flex; flex-direction: column; }
 
-/* Заголовки секций лежат прямо на фоне-арте — подложка-тень для читаемости. */
-#main header h1, #main header p, #main header > div { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85); }
+/* Три колонки на десктопе (всё в один экран), стопкой на телефоне. */
+.atlas-grid { display: grid; grid-template-columns: 1fr; flex: 1; }
+.pane { display: flex; flex-direction: column; min-height: 0; }
+#map-pane { aspect-ratio: 1000 / 640; width: 100%; order: -1; }
+#map-pane, #details { scroll-margin-top: 56px; }
+@media (min-width: 1024px) {
+  .atlas-grid { grid-template-columns: 300px minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); height: calc(100vh - 52px - 33px); flex: none; min-height: 0; }
+  .atlas-grid > .pane { overflow: hidden; }
+  #map-pane { aspect-ratio: auto; order: 0; }
+}
+@media (max-width: 1023px) {
+  #map-pane.has-view { aspect-ratio: auto; height: 78vh; }
+  .pane:not(#map-pane) { max-height: 75vh; border-left: 0; border-right: 0; border-top: 1px solid #39262c; }
+}
 
-/* Плавная подмена вкладок htmx: затухание старого -> проявление нового. */
-#main { transition: opacity 0.18s ease, transform 0.18s ease; }
-#main.htmx-swapping { opacity: 0; transform: translateY(6px); }
+/* ---------- звёздная карта ---------- */
+.starmap { width: 100%; height: 100%; display: block; }
+.starmap .stars { fill: #ece0cb; }
+.starmap .orbit { fill: none; stroke: #ece0cb; stroke-opacity: .07; stroke-width: 1; }
+.starmap .planet { cursor: pointer; outline: none; }
+.starmap .planet .hitbox { fill: transparent; }
+.starmap .planet .body { transition: transform .2s ease, filter .2s ease; transform-box: fill-box; transform-origin: center; }
+.starmap .planet:hover .body, .starmap .planet:focus-visible .body { transform: scale(1.18); filter: drop-shadow(0 0 10px rgba(236, 224, 203, .45)); }
+.starmap .planet .label { fill: #ece0cb; font: 600 10px Inter, sans-serif; letter-spacing: .22em; text-anchor: middle; paint-order: stroke; stroke: #08060a; stroke-width: 3px; }
+.starmap .planet:hover .label { fill: #fff; }
+.starmap .planet.dim { opacity: .38; }
+.starmap .planet.dim:hover { opacity: .9; }
+.starmap .ring-plan { fill: none; stroke: #e8455c; stroke-width: 2; animation: pulse 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.starmap .ring-find { fill: none; stroke: #e2b45a; stroke-width: 1.6; stroke-dasharray: 4 3; }
+.starmap .badge rect { fill: #c0233f; }
+.starmap .badge text { fill: #fff; font: 700 10px "Space Mono", monospace; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .starmap .ring-plan { animation: none; } .starmap .planet .body { transition: none; } }
+
+.legend-dot { width: 12px; height: 12px; border-width: 2px; border-radius: 999px !important; display: inline-block; }
+
+/* ---------- вид планеты ---------- */
+.planet-head {
+  display: flex; gap: 16px; align-items: center; padding: 14px 16px;
+  border-bottom: 1px solid #39262c;
+  background: radial-gradient(120% 220% at 0% 50%, color-mix(in srgb, var(--pc, #c0233f) 28%, transparent), transparent 60%);
+}
+.node-tile {
+  display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 9px 11px;
+  background: rgba(24, 16, 18, .8); border: 1px solid #39262c; transition: border-color .15s, background .15s;
+}
+.node-tile:hover { border-color: #a3938b; background: #21161a; }
+.node-tile .node-dia { width: 8px; height: 8px; transform: rotate(45deg); background: #a3938b; flex-shrink: 0; }
+.node-tile.is-plan { border-color: #e8455c; }
+.node-tile.is-plan .node-dia { background: #e8455c; box-shadow: 0 0 8px #e8455c; }
+.node-tile.is-find:not(.is-plan) { border-color: #e2b45a; }
+.node-tile.is-find:not(.is-plan) .node-dia { background: #e2b45a; }
+.node-tile.is-pinned { outline: 1px solid #ece0cb; }
+
+/* ---------- строки дропа ---------- */
+.drop-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-left: 2px solid transparent; }
+.drop-row img { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; }
+.drop-row.want { border-left-color: #e8455c; background: rgba(192, 35, 63, .12); }
+
+/* ---------- тултип ---------- */
+.map-tip {
+  position: fixed; z-index: 60; width: 340px; max-height: 380px; overflow: hidden; pointer-events: none;
+  background: rgba(16, 11, 13, .97); border: 1px solid #39262c; box-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+  padding: 10px 12px; font-size: 12px; color: #ece0cb;
+}
+.map-tip .tip-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 800; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; }
+.map-tip .tip-h span { font: 400 11px Inter, sans-serif; letter-spacing: 0; text-transform: none; color: #a3938b; }
+.map-tip .tip-s { margin-top: 8px; margin-bottom: 3px; font: 700 10px "Space Mono", monospace; letter-spacing: .14em; text-transform: uppercase; color: #a3938b; }
+.map-tip .tip-res { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.map-tip .tip-res span { display: inline-flex; align-items: center; gap: 4px; }
+.map-tip .tip-res img { width: 18px; height: 18px; object-fit: contain; }
+.map-tip .tip-t { color: #ece0cb; line-height: 1.45; }
+.map-tip .tip-hit { margin-top: 6px; color: #e8455c; font-weight: 600; }
+.map-tip .tip-find { margin-top: 4px; color: #e2b45a; font-weight: 600; }
+.map-tip .tip-row { display: flex; align-items: center; gap: 6px; padding: 1px 0; }
+.map-tip .tip-row i { width: 6px; height: 6px; flex-shrink: 0; }
+.map-tip .tip-row b { flex: 1; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-tip .tip-row em { font: 400 11px "Space Mono", monospace; color: #a3938b; font-style: normal; }
+.map-tip .tip-row.want b { color: #e8455c; font-weight: 700; }
+.map-tip .tip-more { color: #a3938b; font-size: 11px; }
+.map-tip .tip-foot { margin-top: 8px; color: #a3938b; font-size: 11px; }
+@media (hover: none) { .map-tip { display: none !important; } }
 
 /* Скроллбары в тон. */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #0d0a0b; }
 ::-webkit-scrollbar-thumb { background: #39262c; }
 ::-webkit-scrollbar-thumb:hover { background: #c0233f; }
-
-/* Аккуратное скрытие «битых» картинок. */
-img.broken { visibility: hidden; }

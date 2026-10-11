@@ -21,12 +21,15 @@ const OUT_FILE = join(OUT_DIR, 'primes.json');
 // Коммитимый запас категорий: последняя известная категория каждого предмета.
 // Нужен, если warframestat недоступен в момент сборки (в CI локального кэша нет).
 const CAT_FILE = join(OUT_DIR, 'categories.json');
-const CACHE_DIR = join(__dirname, '..', '.cache');
+const ATLAS_FILE = join(OUT_DIR, 'atlas.json');
+// Коммитимый запас иконок (имя -> imageName на CDN), как и категории.
+const IMG_FILE = join(OUT_DIR, 'images.json');
+const CACHE_DIR =join(__dirname, '..', '.cache');
 const HTML_CACHE = join(CACHE_DIR, 'droptable.html');
 const ITEMS_CACHE = join(CACHE_DIR, 'items.json');
 
 const DROPTABLE_URL = 'https://www.warframe.com/droptables';
-const ITEMS_URL = 'https://api.warframestat.us/items/?language=en&only=name,isPrime,category,productCategory';
+const ITEMS_URL = 'https://api.warframestat.us/items/?language=en&only=name,isPrime,category,productCategory,imageName';
 
 const STATES = ['Intact', 'Exceptional', 'Flawless', 'Radiant'];
 const CDN = 'https://cdn.warframestat.us/img/';
@@ -179,6 +182,151 @@ function parseRelicDrops(html) {
   return drops;
 }
 
+// ======================= КАРТА (Tenno Atlas) =======================
+// Базовые ресурсы планет: их нет в droptable (падают с врагов/ящиков), но они
+// не меняются годами — задаём таблицей (по вики / внутриигровой звёздной карте).
+const PLANET_RESOURCES = {
+  Mercury: ['Ferrite', 'Polymer Bundle', 'Morphics', 'Detonite Ampule'],
+  Venus: ['Alloy Plate', 'Polymer Bundle', 'Circuits', 'Fieldron Sample'],
+  Earth: ['Ferrite', 'Rubedo', 'Neurodes', 'Detonite Ampule'],
+  Lua: ['Ferrite', 'Rubedo', 'Neurodes', 'Detonite Ampule'],
+  Mars: ['Salvage', 'Morphics', 'Gallium', 'Fieldron Sample'],
+  Phobos: ['Alloy Plate', 'Rubedo', 'Plastids', 'Morphics', 'Fieldron Sample'],
+  Deimos: ['Nano Spores', 'Neurodes', 'Orokin Cell', 'Mutagen Sample'],
+  Ceres: ['Alloy Plate', 'Circuits', 'Orokin Cell', 'Detonite Ampule'],
+  Jupiter: ['Alloy Plate', 'Salvage', 'Hexenon', 'Neural Sensors', 'Fieldron Sample'],
+  Europa: ['Morphics', 'Rubedo', 'Control Module', 'Fieldron Sample'],
+  Saturn: ['Nano Spores', 'Plastids', 'Orokin Cell', 'Detonite Ampule'],
+  Uranus: ['Polymer Bundle', 'Plastids', 'Gallium', 'Detonite Ampule'],
+  Neptune: ['Ferrite', 'Nano Spores', 'Control Module', 'Fieldron Sample'],
+  Pluto: ['Alloy Plate', 'Plastids', 'Rubedo', 'Morphics', 'Fieldron Sample'],
+  Sedna: ['Alloy Plate', 'Salvage', 'Rubedo', 'Detonite Ampule'],
+  Eris: ['Nano Spores', 'Plastids', 'Neurodes', 'Mutagen Sample'],
+  Void: ['Ferrite', 'Rubedo', 'Argon Crystal', 'Control Module'],
+  'Kuva Fortress': ['Salvage', 'Circuits', 'Neural Sensors', 'Detonite Ampule'],
+};
+
+// Открытые миры/хабы: секции наград баунти -> планета, на которой стоят на карте.
+const BOUNTY_SECTIONS = [
+  ['cetusRewards', 'solarisRewards', 'Earth'],
+  ['solarisRewards', 'deimosRewards', 'Venus'],
+  ['deimosRewards', 'zarimanRewards', 'Deimos'],
+  ['zarimanRewards', 'entratiLabRewards', 'Zariman'],
+  ['entratiLabRewards', 'hexRewards', 'Deimos'],
+  ['hexRewards', 'modByAvatar', 'Höllvania'],
+];
+
+const RELIC_NAME = /^(Lith|Meso|Neo|Axi|Requiem) \S+ Relic( \(\w+\))?$/;
+// "240X Polymer Bundle", "400 Endo", "2,500 Credits Cache" (но не "3 Day Affinity Booster")
+const QTY = /^(\d[\d,]*)(X)? (.+)$/;
+const hasQty = (q) => q && (q[2] || /Endo$|Credits Cache$/.test(q[3]));
+const FRAME_COMP = /^(.+?) (Neuroptics|Chassis|Systems)( Blueprint)?$/;
+const GEAR_PART = /(Blueprint|Barrel|Receiver|Stock|Blade|Blades|Handle|Hilt|Link|Grip|String|Limb|Guard|Gauntlet|Pouch|Head|Disc|Chain|Ornament|Boot|Heatsink|Motor|Subcortex|Casing|Core|Capsule|Engine|Avionics)$/;
+
+// Строки таблицы droptable -> [{loc, rot, item, chance}]. Подзаголовки-стадии баунти
+// (pad-cell) не сбрасывают локацию; для одинаковых предметов берём максимальный шанс.
+function walkTable(sec, onRow) {
+  const rowRe = /<tr[^>]*>(.*?)<\/tr>/gs;
+  let loc = null, rot = null, m;
+  while ((m = rowRe.exec(sec)) !== null) {
+    const row = m[1];
+    const th = row.match(/<th[^>]*>(.*?)<\/th>/);
+    if (th) {
+      const t = th[1].trim();
+      if (/^Rotation\b/i.test(t)) rot = t.replace(/^Rotation\s+/i, '');
+      else if (!/pad-cell/.test(row)) { loc = t; rot = null; }
+      continue;
+    }
+    if (!loc) continue;
+    const cells = [...row.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((c) => c[1].trim()).filter(Boolean);
+    if (cells.length < 2) continue;
+    const cm = cells[cells.length - 1].match(/([\d.]+)%/);
+    if (!cm) continue;
+    onRow(loc, rot, cells[cells.length - 2].replace(/&#39;/g, "'").replace(/&amp;/g, '&'), parseFloat(cm[1]));
+  }
+}
+
+function planetOfHeader(loc) {
+  // "Earth/Korm's Belt (Skirmish) Extra" — доп. таблица того же узла Railjack
+  const extra = / Extra$/.test(loc);
+  const h = parseHeader(loc.replace(/ Extra$/, ''));
+  const { planet, type } = h;
+  const node = extra ? h.node + ' (Extra)' : h.node;
+  if (!planet) {
+    if (/^Recall: Ten-Zero/i.test(loc)) return { planet: 'Zariman', node: loc, type: 'Recall' };
+    return null;
+  }
+  if (/^Event:/i.test(planet)) return null; // ивенты временные — не на карте
+  const p = planet.replace(/^.*,\s*/, ''); // "Dark Refractory, Deimos" -> Deimos
+  return { planet: p, node, type };
+}
+
+function parseNodes(html, resourceNames) {
+  const nodes = new Map(); // key -> {p, n, t, r: {rot: Map(item -> {chance, qty})}}
+  // ресурсы = то, что выдаётся пачкой («240X …»), + базовые ресурсы планет + категория warframestat
+  const qtyNames = new Set(Object.values(PLANET_RESOURCES).flat());
+  const add = (planet, node, type, rot, raw, chance) => {
+    const key = planet + '|' + node;
+    let nd = nodes.get(key);
+    if (!nd) { nd = { p: planet, n: node, t: type, r: {} }; nodes.set(key, nd); }
+    const rk = rot || '';
+    const bucket = nd.r[rk] || (nd.r[rk] = new Map());
+    let name = raw, qty = null;
+    const q = raw.match(QTY);
+    if (hasQty(q) && !RELIC_NAME.test(raw)) { qty = q[1] + (q[2] ? 'x' : ''); name = q[3]; qtyNames.add(name); }
+    const prev = bucket.get(name);
+    if (!prev || chance > prev.chance) bucket.set(name, { chance, qty });
+  };
+
+  walkTable(sectionBetween(html, 'missionRewards', 'relicRewards'), (loc, rot, item, chance) => {
+    if (EXCLUDE_LOCATION.test(loc)) return;
+    const h = planetOfHeader(loc);
+    if (h) add(h.planet, h.node, h.type, rot, item, chance);
+  });
+  for (const [from, to, planet] of BOUNTY_SECTIONS) {
+    walkTable(sectionBetween(html, from, to), (loc, rot, item, chance) => {
+      add(planet, loc.replace(/\s+Rewards?$/i, ''), 'Bounty', rot, item, chance);
+    });
+  }
+
+  // Классификация предметов.
+  const names = new Set();
+  for (const nd of nodes.values()) for (const b of Object.values(nd.r)) for (const n of b.keys()) names.add(n);
+  // Варфрейм = владелец, у которого встречается минимум 2 разных компонента
+  // (отсекает моды «Gyromag Systems» и оружие вроде «Spectra Vandal Chassis»).
+  const comps = new Map();
+  for (const n of names) { const f = n.match(FRAME_COMP); if (f) comps.set(f[1], (comps.get(f[1]) || new Set()).add(f[2])); }
+  const frameOwners = new Set([...comps].filter(([, c]) => c.size >= 2).map(([o]) => o));
+
+  const classify = (n) => {
+    if (RELIC_NAME.test(n)) return { kind: 'relic' };
+    if (/Credits Cache$|^Endo$/.test(n)) return { kind: 'currency' };
+    const f = n.match(FRAME_COMP);
+    if (f && frameOwners.has(f[1])) return { kind: 'frame', owner: f[1] };
+    const bp = n.match(/^(.+) Blueprint$/);
+    if (bp && frameOwners.has(bp[1])) return { kind: 'frame', owner: bp[1] };
+    if (qtyNames.has(n) || resourceNames.has(n)) return { kind: 'resource' };
+    if (GEAR_PART.test(n)) return { kind: 'gear', owner: n.replace(new RegExp(' ' + GEAR_PART.source), '').replace(/ (Barrel|Receiver|Stock|Blade|Handle)$/, '') };
+    return { kind: 'other' };
+  };
+
+  const itemIndex = new Map();
+  const items = [];
+  const idx = (n) => {
+    if (!itemIndex.has(n)) { itemIndex.set(n, items.length); items.push({ name: n, ...classify(n) }); }
+    return itemIndex.get(n);
+  };
+  const out = [...nodes.values()].map((nd) => {
+    const r = {};
+    for (const rk of Object.keys(nd.r).sort()) {
+      r[rk] = [...nd.r[rk]].sort((a, b) => b[1].chance - a[1].chance)
+        .map(([n, v]) => (v.qty ? [idx(n), v.chance, v.qty] : [idx(n), v.chance]));
+    }
+    return { p: nd.p, n: nd.n, t: nd.t, r };
+  });
+  return { nodes: out, items };
+}
+
 async function main() {
   console.log('Загружаю официальный droptable Digital Extremes...');
   const html = await fetchWithRetry(DROPTABLE_URL, { cacheFile: HTML_CACHE });
@@ -190,6 +338,13 @@ async function main() {
   const catMap = new Map();
   const baseCatMap = new Map();
   const savedCat = new Map();
+  const imageMap = new Map();
+  const resourceNames = new Set();
+  const savedImg = new Map();
+  try {
+    const saved = JSON.parse(await readFile(IMG_FILE, 'utf8'));
+    for (const [k, v] of Object.entries(saved)) savedImg.set(k, v);
+  } catch { /* запаса иконок ещё нет */ }
   try {
     const saved = JSON.parse(await readFile(CAT_FILE, 'utf8'));
     for (const [k, v] of Object.entries(saved)) savedCat.set(k, v);
@@ -198,6 +353,8 @@ async function main() {
     console.log('Загружаю категории из warframestat (обогащение)...');
     const items = await fetchWithRetry(ITEMS_URL, { json: true, cacheFile: ITEMS_CACHE });
     for (const i of items) {
+      if (i.imageName) imageMap.set(i.name, i.imageName);
+      if (i.category === 'Resources') resourceNames.add(i.name);
       const cat = categoryFromWarframestat(i);
       if (i.isPrime) catMap.set(i.name, cat);
       else baseCatMap.set(i.name, cat);
@@ -281,6 +438,36 @@ async function main() {
   const cats = Object.fromEntries(savedCat);
   for (const it of items) if (it.category) cats[it.name] = it.category;
   await writeFile(CAT_FILE, JSON.stringify(cats, null, 2) + '\n');
+
+  // --- Карта ---
+  const atlas = parseNodes(html, resourceNames);
+  if (atlas.nodes.length < 300) {
+    throw new Error(`Подозрительно мало узлов карты (${atlas.nodes.length}) — прерываю.`);
+  }
+  // Иконки: imageName из warframestat (+ коммитнутый запас, если API лежит).
+  const imgs = Object.fromEntries(savedImg);
+  for (const [k, v] of imageMap) imgs[k] = v;
+  const wanted = new Set();
+  for (const it of atlas.items) { wanted.add(it.name); if (it.owner) wanted.add(it.owner); }
+  for (const list of Object.values(PLANET_RESOURCES)) for (const r of list) wanted.add(r);
+  const images = {};
+  for (const n of wanted) if (imgs[n]) images[n] = imgs[n];
+  for (const it of atlas.items) {
+    const im = images[it.name] || (it.owner && images[it.owner]);
+    if (im) it.img = im;
+  }
+  const atlasOut = {
+    generatedAt: out.generatedAt,
+    cdn: CDN,
+    planets: Object.fromEntries(Object.entries(PLANET_RESOURCES).map(([p, res]) => [p, res.map((r) => [r, images[r] || null])])),
+    items: atlas.items,
+    nodes: atlas.nodes,
+  };
+  await writeFile(ATLAS_FILE, JSON.stringify(atlasOut));
+  await writeFile(IMG_FILE, JSON.stringify(Object.fromEntries(Object.entries({ ...Object.fromEntries(savedImg), ...images }).sort()), null, 0) + '\n');
+  const kinds = {};
+  for (const it of atlas.items) kinds[it.kind] = (kinds[it.kind] || 0) + 1;
+  console.log(`Карта: ${ATLAS_FILE} (${(JSON.stringify(atlasOut).length / 1024).toFixed(1)} KB) | узлов: ${atlas.nodes.length} | предметы: ${JSON.stringify(kinds)}`);
 
   const totalMissions = relics.reduce((s, r) => s + r.missions.length, 0);
   console.log(`\nГотово: ${OUT_FILE} (${(JSON.stringify(out).length / 1024).toFixed(1)} KB)`);

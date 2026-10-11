@@ -1,8 +1,8 @@
 name: Обновление данных дропа
 
-# Реликвии и прайм-предметы ваултятся/анваултятся примерно раз в квартал.
-# Этот воркфлоу сам пересобирает data/primes.json по расписанию и коммитит изменения,
-# поэтому на захостенном сайте дропы обновляются автоматически.
+# Реликвии ваултятся/анваултятся, DE меняет таблицы дропа с патчами.
+# Этот воркфлоу каждый день пересобирает data/*.json из официального droptable и коммитит изменения;
+# после него воркфлоу pages.yml публикует сайт.
 
 on:
   schedule:
@@ -28,12 +28,15 @@ jobs:
       - name: Пересобрать данные
         run: node tools/build-data.mjs
 
+      - name: Проверить данные карты
+        run: node tools/test-atlas.cjs
+
       - name: Закоммитить, если изменилось
         run: |
-          if [[ -n "$(git status --porcelain data/primes.json data/categories.json)" ]]; then
+          if [[ -n "$(git status --porcelain data/)" ]]; then
             git config user.name "whylone"
             git config user.email "whylone@users.noreply.github.com"
-            git add data/primes.json data/categories.json
+            git add data/
             git commit -m "chore(data): авто-обновление дропа $(date -u +%Y-%m-%d)"
             git push
           else
