@@ -75,11 +75,21 @@
       <span class="hidden md:inline hud-meta" x-show="$store.wf.loaded" x-text="$store.wf.t('data_sync') + ' ' + $store.wf.dateStr()"></span>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('left')" :class="$store.wf.panel==='left' && 'on'" x-text="$store.wf.t('planner_short')"></button>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('right')" :class="$store.wf.panel==='right' && 'on'" x-text="$store.wf.t('search_short')"></button>
+      <button class="wf-btn hidden md:inline-block" @click="$store.wf.toggleMode()" :class="$store.wf.mode==='late' && 'on'" :title="$store.wf.t('mode_hint')" x-text="$store.wf.mode==='late' ? $store.wf.t('mode_late') : $store.wf.t('mode_base')"></button>
       <button data-lang-toggle @click="$store.wf.toggleLang()" class="wf-btn" aria-label="Language">
         <span :class="$store.wf.lang==='en' ? 'text-gold' : 'text-dim'">EN</span><span class="text-line mx-1">/</span><span :class="$store.wf.lang==='ru' ? 'text-gold' : 'text-dim'">RU</span>
       </button>
+      <button class="wf-btn w-[34px] px-0" @click="$store.wf.aboutOpen = !$store.wf.aboutOpen" :class="$store.wf.aboutOpen && 'on'" :aria-label="$store.wf.t('about')">i</button>
     </div>
   </header>
+
+  <div x-show="$store.wf.aboutOpen" x-cloak x-transition.opacity class="about" @click.outside="$store.wf.aboutOpen = false">
+    <div class="wf-head px-0 pt-0"><h2 x-text="$store.wf.t('about')"></h2><button class="wf-close" @click="$store.wf.aboutOpen = false">×</button></div>
+    <p x-text="$store.wf.t('about_text')"></p>
+    <button class="wf-btn mt-3 md:hidden" @click="$store.wf.toggleMode()" :class="$store.wf.mode==='late' && 'on'" x-text="$store.wf.mode==='late' ? $store.wf.t('mode_late') : $store.wf.t('mode_base')"></button>
+    <p class="text-dim text-[11px] mt-1 md:hidden" x-text="$store.wf.t('mode_hint')"></p>
+    <p class="text-dim text-[11px] mt-2" x-text="$store.wf.t('credits')"></p>
+  </div>
 
   <div x-show="!$store.wf.loaded" class="loading">
     <img src="media/lotus.png" alt="" class="w-20 opacity-80 animate-pulse" />

@@ -15,7 +15,8 @@
       back: 'Star chart', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
       rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to fly to it',
       your: 'Your drops', more: 'more', data_sync: 'Data',
-      updated: 'Data refreshed', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
+      updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
+      about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0). Item icons: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
       controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
     },
@@ -32,7 +33,8 @@
       back: 'Звёздная карта', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
       rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы подлететь',
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные',
-      updated: 'Данные обновлены', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
+      updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
+      about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0). Иконки предметов: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
       controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
     },
@@ -77,7 +79,8 @@
       pinned: null,
       tip: { show: false, x: 0, y: 0, html: '' },
 
-      planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, panel: null,
+      planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, panel: null, aboutOpen: false,
+      mode: lsGet('wf_mode') === 'late' ? 'late' : 'base',
 
       async load(silent) {
         try {
@@ -106,6 +109,7 @@
       planetName(p) { return this.lang === 'ru' ? (PLANET_RU[p] || p) : p; },
       typeName(t) { return !t ? '' : this.lang === 'ru' ? (TYPE_RU[t] || t) : t; },
       toggleLang() { this.lang = this.lang === 'en' ? 'ru' : 'en'; lsSet('wf_lang', this.lang); this.emit(); },
+      toggleMode() { this.mode = this.mode === 'late' ? 'base' : 'late'; lsSet('wf_mode', this.mode); this.emit(); },
       emit() { window.dispatchEvent(new CustomEvent('atlas:update')); },
 
       img(name) { return name ? this.A.cdn + encodeURIComponent(name) : ''; },
