@@ -205,6 +205,7 @@ function walkTable(sec, onRow) {
     if (th) {
       const t = th[1].trim();
       if (/^Rotation\b/i.test(t)) rot = t.replace(/^Rotation\s+/i, '');
+      else if (/^(First|Subsequent) Completions?$/i.test(t) && loc) { loc = loc.replace(/ · (First|Subsequent) Completions?$/i, '') + ' · ' + t; rot = null; }
       else if (!/pad-cell/.test(row)) { loc = t; rot = null; }
       continue;
     }

@@ -156,8 +156,8 @@
           <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="wf-row">
             <span class="wf-rank" x-text="i + 1"></span>
             <span class="flex-1 min-w-0">
-              <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
-              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + ' · ' + h.lines.map(l => l.name.replace(/ Relic.*$/, '')).join(', ')"></span>
+              <span class="block text-sm truncate"><span x-text="$store.wf.nodeLabel(h.node)"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
+              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.rotName(h.rot) : '') + ' · ' + h.lines.map(l => l.name.replace(/ Relic.*$/, '')).join(', ')"></span>
             </span>
             <span class="wf-pct text-gold" x-text="$store.wf.fmt(h.eff)"></span>
           </button>
@@ -180,7 +180,7 @@
         <div class="wf-scroll flex-1 px-3 pb-3 space-y-3">
           <template x-for="g in $store.wf.nodeGroups($store.wf.pinnedNode())" :key="g.rot">
             <div>
-              <div x-show="g.rot" class="wf-sub" x-text="$store.wf.t('rot') + ' ' + g.rot"></div>
+              <div x-show="g.rot" class="wf-sub" x-text="$store.wf.rotName(g.rot)"></div>
               <template x-for="r in g.rows" :key="r.it.name">
                 <div class="drop-row" :class="$store.wf.isWanted($store.wf.pinnedNode(), r.it) && 'want'">
                   <img :src="$store.wf.itemImg(r.it)" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
@@ -197,7 +197,33 @@
       </div>
     </template>
 
-    <div x-show="!$store.wf.pinnedNode()" class="flex flex-col min-h-0 flex-1">
+    <template x-if="!$store.wf.pinnedNode() && $store.wf.pinnedHub()">
+      <div class="flex flex-col min-h-0 flex-1">
+        <div class="wf-head items-start">
+          <div class="flex-1 min-w-0">
+            <h2 x-text="$store.wf.hubSub($store.wf.pinnedHub())"></h2>
+            <div class="node-title" x-text="$store.wf.hubName($store.wf.pinnedHub())"></div>
+            <div class="text-xs text-dim" x-text="$store.wf.planetName($store.wf.pinnedHub().p) + ' · ' + $store.wf.pinnedHub().nodes.length + ' ' + $store.wf.t('missions')"></div>
+          </div>
+          <button @click="$store.wf.closeHub()" class="wf-close" :aria-label="$store.wf.t('close')">×</button>
+        </div>
+        <p class="px-4 pb-2 text-[11px] text-dim" x-text="$store.wf.t('hub_hint')"></p>
+        <div class="wf-scroll flex-1 pb-3">
+          <template x-for="n in $store.wf.pinnedHub().nodes" :key="n.key">
+            <button @click="$store.wf.pin(n.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(n))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()" class="wf-row px-4">
+              <span x-show="n.lvl" class="hub-lvl" x-text="n.lvl"></span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-sm truncate" x-text="n.short"></span>
+                <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(n.t)"></span>
+              </span>
+              <span class="wf-pct" :class="$store.wf.planHits.get(n.key) ? 'text-gold' : 'text-cyan'" x-text="$store.wf.planHits.get(n.key) ? $store.wf.fmt($store.wf.planHits.get(n.key).eff) : $store.wf.findHits.get(n.key) ? $store.wf.fmt($store.wf.findHits.get(n.key).eff) : ''"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="!$store.wf.pinnedNode() && !$store.wf.pinnedHub()" class="flex flex-col min-h-0 flex-1">
       <div class="wf-head">
         <h2 x-text="$store.wf.t('search')"></h2>
         <button class="wf-close lg:hidden" @click="$store.wf.panel=null" :aria-label="$store.wf.t('close')">×</button>
@@ -237,8 +263,8 @@
         <template x-for="h in $store.wf.focusList()" :key="h.node.key">
           <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="wf-row px-4">
             <span class="flex-1 min-w-0">
-              <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
-              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + (h.qty ? ' · ' + h.qty : '') + (h.via ? ' · ' + h.via : '')"></span>
+              <span class="block text-sm truncate"><span x-text="$store.wf.nodeLabel(h.node)"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
+              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.rotName(h.rot) : '') + (h.qty ? ' · ' + h.qty : '') + (h.via ? ' · ' + h.via : '')"></span>
             </span>
             <span class="wf-pct text-cyan" x-text="$store.wf.fmt(h.eff)"></span>
           </button>

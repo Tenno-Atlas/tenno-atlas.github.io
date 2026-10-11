@@ -18,6 +18,7 @@
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
       about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0). Item icons: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
       controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
+      click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
     },
     ru: {
@@ -36,6 +37,7 @@
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
       about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0). Иконки предметов: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
       controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
+      click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
     },
   };
@@ -54,6 +56,53 @@
     'Void Flood': 'Затопление Бездны', 'Void Cascade': 'Каскад Бездны', 'Void Armageddon': 'Армагеддон Бездны',
     Alchemy: 'Алхимия', Ascension: 'Вознесение', Recall: 'Отзыв', 'Sanctuary Onslaught': 'Натиск Святилища',
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
+  };
+
+  const HUB_ORDER = ['cetus', 'fortuna', 'necralisk', 'sanctum', 'chrysalith', 'hex', 'bounty', 'perita', 'recall', 'railjack'];
+  const HUB_TEXT = {
+    en: {
+      cetus: ['Cetus', 'Plains of Eidolon bounties'], fortuna: ['Fortuna', 'Orb Vallis bounties'], necralisk: ['Necralisk', 'Cambion Drift bounties'],
+      sanctum: ['Sanctum Anatomica', 'Lab bounties'], chrysalith: ['Chrysalith', 'Zariman bounties'], hex: ['The Hex', 'Höllvania bounties'],
+      bounty: ['Bounties', 'Bounties'], perita: ['The Perita Rebellion', 'Weekly'], recall: ['Recall: Ten-Zero', 'Weekly'], railjack: ['{p} Proxima', 'Railjack'],
+    },
+    ru: {
+      cetus: ['Цетус', 'Баунти Равнин Эйдолона'], fortuna: ['Фортуна', 'Баунти Долины Сфер'], necralisk: ['Некралиск', 'Баунти Камбионского дрейфа'],
+      sanctum: ['Санктум Анатомика', 'Баунти лаборатории'], chrysalith: ['Хризалит', 'Баунти Заримана'], hex: ['Гекс', 'Баунти Хёлльвании'],
+      bounty: ['Баунти', 'Баунти'], perita: ['Восстание Периты', 'Еженедельно'], recall: ['Отзыв: Десять-Ноль', 'Еженедельно'], railjack: ['Проксима: {p}', 'Рейлджек'],
+    },
+  };
+  const hubOf = (n) => {
+    if (n.t === 'Skirmish') return n.p === 'Veil Proxima' ? null : 'railjack';
+    if (n.t === 'The Perita Rebellion') return 'perita';
+    if (n.t === 'Recall') return 'recall';
+    if (n.t !== 'Bounty') return null;
+    if (/Cetus|Ghoul|Plague Star/i.test(n.n)) return 'cetus';
+    if (/Orb Vallis|PROFIT-TAKER/i.test(n.n)) return 'fortuna';
+    if (/Cambion|Isolation Vault/i.test(n.n)) return 'necralisk';
+    if (/Entrati Lab/i.test(n.n)) return 'sanctum';
+    if (/Zariman/i.test(n.n)) return 'chrysalith';
+    if (/WF1999/i.test(n.n)) return 'hex';
+    return 'bounty';
+  };
+  const prepNodes = (nodes) => {
+    const byKey = new Map(nodes.map((n) => [n.p + '|' + n.n, n]));
+    const out = [];
+    for (const n of nodes) {
+      const m = n.n.match(/^(.*) \(Extra\)$/);
+      const base = m && byKey.get(n.p + '|' + m[1]);
+      if (base) { for (const [rot, d] of Object.entries(n.r)) base.r[rot ? 'Extra ' + rot : 'Extra'] = d; continue; }
+      out.push(n);
+    }
+    out.forEach((n) => {
+      n.key = n.p + '|' + n.n;
+      n.hub = hubOf(n);
+      n.hk = n.hub ? 'hub:' + n.p + '|' + n.hub : null;
+      const lv = n.n.match(/^Level\s+(\d+)\s*-\s*(\d+)\s+(.*)$/);
+      n.lv = lv ? +lv[1] : 0;
+      n.lvl = lv ? lv[1] + '–' + lv[2] : '';
+      n.short = lv ? lv[3] : n.n;
+    });
+    return out;
   };
 
   const KIND_ORDER = ['relic', 'frame', 'gear', 'resource', 'currency', 'other'];
@@ -77,6 +126,7 @@
       q: '', focus: null,
       view: null,
       pinned: null,
+      hub: null, hubMap: new Map(),
       tip: { show: false, x: 0, y: 0, html: '' },
 
       planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, panel: null, aboutOpen: false,
@@ -87,9 +137,11 @@
           const get = (u) => fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(u + ' HTTP ' + r.status); return r.json(); });
           const [A, P] = await Promise.all([get('data/atlas.json'), get('data/primes.json')]);
           const changed = this.generatedAt && this.generatedAt !== A.generatedAt;
-          A.nodes.forEach((n) => { n.key = n.p + '|' + n.n; });
+          A.nodes = prepNodes(A.nodes);
           this.A = A; this.P = P; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
           this.nodeByKey = new Map(A.nodes.map((n) => [n.key, n]));
+          this.hubMap = this.buildHubs(A.nodes);
+          if (this.hub && !this.hubMap.has(this.hub)) this.hub = null;
           this.frames = this.buildFrames();
           this._idx = null;
           this.loaded = true; this.error = '';
@@ -120,6 +172,57 @@
       fmt(n) { return n == null ? '' : (Math.round(n * 100) / 100) + '%'; },
       kindColor(k) { return KIND_COLOR[k] || '#a3938b'; },
       dateStr() { return this.generatedAt ? new Date(this.generatedAt).toLocaleDateString(this.lang === 'ru' ? 'ru-RU' : 'en-GB') : ''; },
+
+      buildHubs(nodes) {
+        const map = new Map();
+        nodes.forEach((n) => {
+          if (!n.hk) return;
+          const h = map.get(n.hk) || { key: n.hk, id: n.hub, p: n.p, nodes: [] };
+          h.nodes.push(n);
+          map.set(n.hk, h);
+        });
+        map.forEach((h) => h.nodes.sort((a, b) => a.lv - b.lv || a.short.localeCompare(b.short)));
+        return map;
+      },
+      hubsOf(p) { return [...this.hubMap.values()].filter((h) => h.p === p).sort((a, b) => HUB_ORDER.indexOf(a.id) - HUB_ORDER.indexOf(b.id)); },
+      hubName(h) { return (HUB_TEXT[this.lang][h.id] || [h.id])[0].replace('{p}', this.lang === 'ru' ? this.planetName(h.p) : h.p); },
+      hubSub(h) { return (HUB_TEXT[this.lang][h.id] || ['', ''])[1]; },
+      hubHit(h) {
+        let plan = 0, find = 0;
+        h.nodes.forEach((n) => {
+          const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key);
+          if (ph) plan = Math.max(plan, ph.eff);
+          if (fh) find = Math.max(find, fh.eff);
+        });
+        return { plan, find };
+      },
+      nodeLabel(n) { if (!n.hk) return n.n; const h = this.hubMap.get(n.hk); return (h ? this.hubName(h) + ' · ' : '') + (n.lvl ? n.lvl + ' ' : '') + n.short; },
+      pinnedHub() { return this.hub ? this.hubMap.get(this.hub) || null : null; },
+      openHub(key) {
+        this.hub = key; this.pinned = null; this.hideTip();
+        if (window.innerWidth < 1024) this.panel = 'right';
+        this.emit();
+      },
+      closeHub() { this.hub = null; this.pinned = null; this.emit(); },
+      rotName(rot) {
+        if (!rot) return '';
+        const m = rot.match(/^Extra ?(.*)$/);
+        if (!m) return this.t('rot') + ' ' + rot;
+        return this.t('bonus') + (m[1] ? ' · ' + this.t('rot') + ' ' + m[1] : '');
+      },
+      hubTip(h) {
+        const hit = this.hubHit(h);
+        let s = `<div class="tip-h">${esc(this.hubName(h))}<span>${esc(this.hubSub(h))}</span></div>`;
+        if (hit.plan) s += `<div class="tip-hit">● ${esc(this.t('your'))}: ${this.fmt(hit.plan)}</div>`;
+        if (hit.find) s += `<div class="tip-find">● ${esc(this.focus)}: ${this.fmt(hit.find)}</div>`;
+        for (const n of h.nodes.slice(0, 14)) {
+          const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key);
+          s += `<div class="tip-row${ph || fh ? ' want' : ''}"><i style="background:${ph ? '#e3b45e' : fh ? '#7fd0e6' : '#5d6f7b'}"></i><b>${n.lvl ? esc(n.lvl) + ' · ' : ''}${esc(n.short)}</b><em>${ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''}</em></div>`;
+        }
+        if (h.nodes.length > 14) s += `<div class="tip-more">+${h.nodes.length - 14} ${esc(this.t('more'))}</div>`;
+        s += `<div class="tip-foot">${esc(this.t('click_hint_hub'))}</div>`;
+        return s;
+      },
 
       buildFrames() {
         const map = new Map();
@@ -248,17 +351,18 @@
 
       openPlanet(p, nodeKey) {
         this.view = p; this.hideTip();
-        if (nodeKey) { this.pinned = nodeKey; if (window.innerWidth < 1024) this.panel = 'right'; }
+        this.hub = null; this.pinned = null;
+        if (nodeKey) { this.pinned = nodeKey; this.hub = (this.nodeByKey.get(nodeKey) || {}).hk || null; if (window.innerWidth < 1024) this.panel = 'right'; }
         else if (window.innerWidth < 1024) this.panel = null;
         window.dispatchEvent(new CustomEvent('atlas:fly', { detail: { planet: p, node: nodeKey || null } }));
       },
       pin(key) {
-        this.pinned = key; this.hideTip();
+        this.pinned = key; this.hub = (this.nodeByKey.get(key) || {}).hk || null; this.hideTip();
         if (window.innerWidth < 1024) this.panel = 'right';
         this.emit();
       },
       closePlanet() {
-        this.view = null; this.pinned = null; this.hideTip();
+        this.view = null; this.pinned = null; this.hub = null; this.hideTip();
         window.dispatchEvent(new CustomEvent('atlas:fly', { detail: { planet: null } }));
       },
       togglePanel(p) { this.panel = this.panel === p ? null : p; },
@@ -299,6 +403,8 @@
         const w = 340, h = 380, pad = 16;
         let x = ev.clientX + pad, y = ev.clientY + pad;
         if (x + w > window.innerWidth) x = Math.max(8, ev.clientX - w - pad);
+        const panel = window.innerWidth >= 1024 && ev.target && ev.target.closest ? ev.target.closest('.wf-panel') : null;
+        if (panel) { const r = panel.getBoundingClientRect(); x = r.left > window.innerWidth / 2 ? r.left - w - 10 : r.right + 10; }
         if (y + h > window.innerHeight) y = Math.max(8, window.innerHeight - h - 8);
         return { x, y };
       },
@@ -321,7 +427,7 @@
       nodeTip(nd) {
         let h = `<div class="tip-h">${esc(nd.n)}<span>${esc(this.typeName(nd.t))}</span></div>`;
         for (const g of this.nodeGroups(nd, 9)) {
-          if (g.rot) h += `<div class="tip-s">${esc(this.t('rot'))} ${esc(g.rot)}</div>`;
+          if (g.rot) h += `<div class="tip-s">${esc(this.rotName(g.rot))}</div>`;
           for (const r of g.rows) {
             const want = this.isWanted(nd, r.it);
             h += `<div class="tip-row${want ? ' want' : ''}"><i style="background:${this.kindColor(r.it.kind)}"></i><b>${r.qty ? esc(r.qty) + ' ' : ''}${esc(r.it.name)}</b><em>${this.fmt(r.ch)}</em></div>`;
@@ -337,6 +443,6 @@
     const s = window.Alpine.store('wf');
     s.load();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) s.refreshIfStale(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (s.pinned) s.pinned = null; else if (s.view) s.closePlanet(); } });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (s.pinned) { s.pinned = null; s.emit(); } else if (s.hub) s.closeHub(); else if (s.view) s.closePlanet(); } });
   });
 })();

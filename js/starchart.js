@@ -511,7 +511,6 @@ function start() {
 
   let view = null, markers = [], nodeLines = null, fly = null, lateOn = false, follow = null;
 
-  const OFF_PLANET = (n) => n.t === 'Bounty' || n.t === 'Skirmish' || / \(Extra\)$/.test(n.n);
   const SOLID = (p) => !p.special || p.special === 'fortress';
 
   function clearMarkers() {
@@ -558,8 +557,8 @@ function start() {
     if (!nodes.length) return;
     const solid = SOLID(pl.def);
     const R = bodyRadius(pl.def);
-    const face = solid ? nodes.filter((n) => !OFF_PLANET(n)) : nodes;
-    const ring = solid ? nodes.filter(OFF_PLANET) : [];
+    const face = nodes.filter((n) => !n.hk);
+    const ring = s.hubsOf(name);
     const { dir, rightV, upV } = frameV;
     nodeLines = new THREE.Group();
     const lineMat = new THREE.LineBasicMaterial({ color: 0xe8f2f6, transparent: true, opacity: 0.45, depthWrite: false });
@@ -587,34 +586,42 @@ function start() {
       }
     });
     if (path.length) nodeLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(path), lineMat));
+    const hubMat = new THREE.LineDashedMaterial({ color: 0xe3b45e, transparent: true, opacity: 0.5, dashSize: R * 0.04, gapSize: R * 0.03, depthWrite: false });
     const per = Math.ceil(ring.length / 2);
-    const sides = { 1: [], '-1': [] };
-    ring.forEach((nd, i) => {
-      const side = i % 2 === 0 ? 1 : -1;
+    ring.forEach((hub, i) => {
+      const side = i % 2 === 0 ? -1 : 1;
       const k = Math.floor(i / 2);
-      const ang = (per > 1 ? k / (per - 1) - 0.5 : 0) * 2.0;
-      const rad = R * (1.3 + (k % 2) * 0.14);
+      const ang = (per > 1 ? k / (per - 1) - 0.5 : 0) * 1.4 + 0.25;
+      const rad = R * 1.42;
       const off = new THREE.Vector3().addScaledVector(rightV, side * Math.cos(ang) * rad).addScaledVector(upV, Math.sin(ang) * rad);
+      const edge = off.clone().setLength(R * 1.04);
+      const link = new THREE.Line(new THREE.BufferGeometry().setFromPoints([edge, off.clone().setLength(rad * 0.97)]), hubMat);
+      link.computeLineDistances();
+      nodeLines.add(link);
       pts.push(off);
-      flat.push({ nd, off: true });
-      sides[side].push({ off, ang });
-    });
-    Object.values(sides).forEach((list) => {
-      const line = list.sort((a, b) => a.ang - b.ang).map((r) => r.off);
-      if (line.length > 1) nodeLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3(line).getPoints(line.length * 12)), lineMat));
+      flat.push({ hub, side });
     });
     flat.forEach((f, i) => {
-      const nd = f.nd;
       const el = document.createElement('button');
       el.type = 'button';
-      el.className = 'node-mk' + (f.off ? ' off' : '');
-      el.innerHTML = '<i></i><span class="nm-name"></span><span class="nm-sub"></span>';
-      el.addEventListener('mouseenter', (ev) => s.showTip(ev, s.nodeTip(nd)));
+      if (f.hub) {
+        const hub = f.hub;
+        el.className = 'node-mk hub' + (f.side < 0 ? ' left' : '');
+        el.innerHTML = '<i></i><span class="nm-name"></span><span class="nm-sub"></span>';
+        el.addEventListener('mouseenter', (ev) => s.showTip(ev, s.hubTip(hub)));
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); s.openHub(hub.key); });
+        markers.push({ el, off: pts[i], hub, outside: true });
+      } else {
+        const nd = f.nd;
+        el.className = 'node-mk';
+        el.innerHTML = '<i></i><span class="nm-name"></span><span class="nm-sub"></span>';
+        el.addEventListener('mouseenter', (ev) => s.showTip(ev, s.nodeTip(nd)));
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); s.pin(nd.key); });
+        markers.push({ el, off: pts[i], node: nd, outside: false });
+      }
       el.addEventListener('mousemove', (ev) => s.moveTip(ev));
       el.addEventListener('mouseleave', () => s.hideTip());
-      el.addEventListener('click', (ev) => { ev.stopPropagation(); s.pin(nd.key); });
       labelLayer.appendChild(el);
-      markers.push({ el, off: pts[i], node: nd, outside: !!f.off });
     });
     pl.group.add(nodeLines);
     refresh();
@@ -642,7 +649,7 @@ function start() {
     controls.maxDistance = dist * 4;
     follow = frameV.target.clone();
     flyTo(frameV.target.clone().addScaledVector(frameV.dir, dist), frameV.target.clone(), () => {
-      if (nodeKey) { const m = markers.find((x) => x.node.key === nodeKey); if (m) { m.el.classList.add('pulse'); setTimeout(() => m.el.classList.remove('pulse'), 2400); } }
+      if (nodeKey) { const m = markers.find((x) => (x.node && x.node.key === nodeKey) || (x.hub && x.hub.nodes.some((n) => n.key === nodeKey))); if (m) { m.el.classList.add('pulse'); setTimeout(() => m.el.classList.remove('pulse'), 2400); } }
     });
     document.body.classList.add('in-planet');
     refresh();
@@ -682,6 +689,15 @@ function start() {
       L.classList.toggle('dim', !!anyHi && !plan && !find);
     });
     markers.forEach((m) => {
+      if (m.hub) {
+        const hit = s.hubHit(m.hub);
+        m.el.querySelector('.nm-name').textContent = s.hubName(m.hub);
+        m.el.querySelector('.nm-sub').textContent = [s.hubSub(m.hub) + ' · ' + m.hub.nodes.length, hit.plan ? s.fmt(hit.plan) : hit.find ? s.fmt(hit.find) : ''].filter(Boolean).join(' · ');
+        m.el.classList.toggle('plan', !!hit.plan);
+        m.el.classList.toggle('find', !hit.plan && !!hit.find);
+        m.el.classList.toggle('pinned', s.hub === m.hub.key);
+        return;
+      }
       const ph = s.planHits.get(m.node.key), fh = s.findHits.get(m.node.key);
       m.el.querySelector('.nm-name').textContent = m.node.n;
       m.el.querySelector('.nm-sub').textContent = [s.typeName(m.node.t), ph ? s.fmt(ph.eff) : '', !ph && fh ? s.fmt(fh.eff) : ''].filter(Boolean).join(' · ');
