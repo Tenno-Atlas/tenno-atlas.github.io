@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Tenno Atlas — Warframe farm map</title>
-  <meta name="description" content="Interactive Warframe star chart: hover any planet or node to see which relics, warframe parts and resources drop there. Prime farm planner, EN/RU." />
+  <meta name="description" content="Interactive Warframe star chart: fly to any planet and see which relics, warframe parts and resources drop on every node. Prime farm planner, EN/RU." />
   <meta property="og:title" content="Tenno Atlas — Warframe farm map" />
-  <meta property="og:description" content="Hover a planet — see relics, warframe parts and resources that drop there. Updated daily from the official drop tables." />
-  <link rel="icon" type="image/x-icon" href="media/oraxia.ico" />
+  <meta property="og:description" content="Fly to a planet — see relics, warframe parts and resources on every node. Updated daily from the official drop tables." />
+  <meta property="og:image" content="media/lotus-180.png" />
+  <meta name="theme-color" content="#02030a" />
+  <link rel="icon" type="image/x-icon" href="media/lotus.ico" />
+  <link rel="apple-touch-icon" href="media/lotus-180.png" />
 
   <link rel="preconnect" href="https://cdn.warframestat.us" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
@@ -20,249 +23,233 @@
       theme: {
         extend: {
           colors: {
-            ink: '#0d0a0b', panel: '#181012', panel2: '#21161a',
-            txt: '#ece0cb', dim: '#a3938b', line: '#39262c',
-            haz: '#c0233f', hot: '#e8455c', bone: '#ece0cb', gold: '#e2b45a',
+            ink: '#02030a', txt: '#e9eef2', dim: '#8a9aa6', line: '#2a3a46',
+            gold: '#e3b45e', cyan: '#7fd0e6', danger: '#e8455c',
           },
           fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['"Space Mono"', 'ui-monospace', 'monospace'],
+            sans: ['Roboto', 'system-ui', 'sans-serif'],
+            cond: ['"Roboto Condensed"', 'Roboto', 'sans-serif'],
           },
         },
       },
     };
   </script>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    } }
+  </script>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body x-data class="bg-ink text-txt font-sans selection:bg-haz selection:text-bone">
+<body x-data class="bg-ink text-txt font-sans">
 
-  <header class="h-[52px] border-b border-line bg-ink/95 backdrop-blur flex items-center gap-4 px-4 sticky top-0 z-40">
-    <div class="flex items-baseline gap-3 min-w-0">
-      <span class="font-extrabold tracking-[0.28em] text-[15px] whitespace-nowrap">TENNO <span class="text-hot">ATLAS</span></span>
-      <span class="hidden sm:inline text-xs text-dim truncate" x-text="$store.wf.t('tagline')"></span>
-    </div>
-    <div class="ml-auto flex items-center gap-4">
-      <span class="hidden md:inline font-mono text-[11px] text-dim" x-show="$store.wf.loaded"
-            x-text="$store.wf.t('data_sync') + ': ' + $store.wf.dateStr()"></span>
-      <button data-lang-toggle @click="$store.wf.toggleLang()"
-        class="text-xs border border-line px-2.5 py-1 hover:border-haz transition-colors" aria-label="Language">
-        <span :class="$store.wf.lang==='en' && 'text-hot font-bold'">EN</span><span class="text-line mx-1">·</span><span :class="$store.wf.lang==='ru' && 'text-hot font-bold'">RU</span>
+  <div id="chart" class="fixed inset-0">
+    <div id="chart-labels" class="absolute inset-0 pointer-events-none"></div>
+    <div class="no-webgl-msg">WebGL is not available in this browser.</div>
+  </div>
+
+  <header class="hud-top">
+    <button @click="$store.wf.view ? $store.wf.closePlanet() : window.dispatchEvent(new CustomEvent('atlas:home'))" class="brand" aria-label="Tenno Atlas">
+      <img src="media/lotus.png" alt="" class="brand-logo" />
+      <span class="brand-text">
+        <span class="brand-name">TENNO <b>ATLAS</b></span>
+        <span class="brand-sub" x-text="$store.wf.t('tagline')"></span>
+      </span>
+    </button>
+
+    <nav class="crumbs" x-show="$store.wf.loaded">
+      <button @click="$store.wf.view && $store.wf.closePlanet()" :class="!$store.wf.view && 'on'" x-text="$store.wf.t('origin')"></button>
+      <template x-if="$store.wf.view">
+        <span class="flex items-center gap-2"><i class="crumb-sep"></i><span class="on" x-text="$store.wf.planetName($store.wf.view)"></span></span>
+      </template>
+    </nav>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <span class="hidden md:inline hud-meta" x-show="$store.wf.loaded" x-text="$store.wf.t('data_sync') + ' ' + $store.wf.dateStr()"></span>
+      <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('left')" :class="$store.wf.panel==='left' && 'on'" x-text="$store.wf.t('planner_short')"></button>
+      <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('right')" :class="$store.wf.panel==='right' && 'on'" x-text="$store.wf.t('search_short')"></button>
+      <button data-lang-toggle @click="$store.wf.toggleLang()" class="wf-btn" aria-label="Language">
+        <span :class="$store.wf.lang==='en' ? 'text-gold' : 'text-dim'">EN</span><span class="text-line mx-1">/</span><span :class="$store.wf.lang==='ru' ? 'text-gold' : 'text-dim'">RU</span>
       </button>
     </div>
   </header>
 
-  <div x-show="!$store.wf.loaded" class="p-10 text-center text-dim">
+  <div x-show="!$store.wf.loaded" class="loading">
+    <img src="media/lotus.png" alt="" class="w-20 opacity-80 animate-pulse" />
     <span x-show="!$store.wf.error" x-text="$store.wf.t('loading')"></span>
-    <span x-show="$store.wf.error" class="text-hot" x-text="$store.wf.t('data_error') + ': ' + $store.wf.error"></span>
+    <span x-show="$store.wf.error" class="text-danger" x-text="$store.wf.t('data_error') + ': ' + $store.wf.error"></span>
   </div>
 
-  <main x-show="$store.wf.loaded" x-cloak class="atlas-grid">
-
-    <aside class="pane border-r border-line">
-      <div class="p-4 pb-3 space-y-3 border-b border-line">
-        <div class="flex items-center justify-between">
-          <h2 class="text-[11px] font-mono tracking-[0.2em] uppercase text-hot" x-text="$store.wf.t('planner')"></h2>
-          <button x-show="$store.wf.selList.length" @click="$store.wf.clearSel()" class="text-[11px] text-dim hover:text-hot" x-text="'× ' + $store.wf.t('clear')"></button>
-        </div>
-        <p class="text-xs text-dim leading-relaxed" x-text="$store.wf.t('planner_hint')"></p>
-        <div class="grid grid-cols-2 border border-line text-xs">
-          <button @click="$store.wf.tab='prime'" :class="$store.wf.tab==='prime' ? 'bg-haz text-bone' : 'text-dim hover:text-txt'" class="py-1.5" x-text="$store.wf.t('tab_prime')"></button>
-          <button @click="$store.wf.tab='frames'" :class="$store.wf.tab==='frames' ? 'bg-haz text-bone' : 'text-dim hover:text-txt'" class="py-1.5 border-l border-line" x-text="$store.wf.t('tab_frames')"></button>
-        </div>
-        <input type="search" x-model="$store.wf.filter" :placeholder="$store.wf.t('filter')"
-          class="w-full bg-panel border border-line px-3 py-1.5 text-sm placeholder:text-dim/60 focus:outline-none focus:border-haz" />
-      </div>
-
-      <div class="flex-1 min-h-0 overflow-y-auto">
-        <template x-for="item in $store.wf.plannerList()" :key="item.pre + item.name">
-          <div class="border-b border-line/60">
-            <div class="flex items-center gap-2 px-3 py-1.5 hover:bg-panel">
-              <button @click="$store.wf.open[item.name] = !$store.wf.open[item.name]" class="flex items-center gap-2 flex-1 min-w-0 text-left">
-                <img :src="$store.wf.img(item.img)" alt="" loading="lazy" class="w-7 h-7 object-contain shrink-0" onerror="this.style.visibility='hidden'" />
-                <span class="text-sm truncate" :class="$store.wf.someSel(item) && 'text-hot'" x-text="item.name"></span>
-              </button>
-              <button @click="$store.wf.toggleSet(item)"
-                :class="$store.wf.allSel(item) ? 'bg-haz border-haz text-bone' : 'border-line text-dim hover:text-txt hover:border-haz'"
-                class="text-[10px] uppercase tracking-wide border px-1.5 py-0.5 whitespace-nowrap" x-text="$store.wf.t('full_set')"></button>
-            </div>
-            <div x-show="$store.wf.open[item.name] || $store.wf.filter.length > 1" class="px-3 pb-2 pl-12 flex flex-wrap gap-1">
-              <template x-for="p in item.parts" :key="p.name">
-                <button @click="$store.wf.toggle(item.pre, p.name)"
-                  :class="$store.wf.isSel(item.pre, p.name) ? 'bg-haz/90 border-haz text-bone' : 'border-line text-dim hover:text-txt hover:border-hot'"
-                  class="text-[11px] border px-2 py-0.5" x-text="p.short"></button>
-              </template>
-            </div>
-          </div>
+  <template x-if="$store.wf.loaded && $store.wf.view">
+    <div class="planet-hud">
+      <div class="ph-name" x-text="$store.wf.planetName($store.wf.view)"></div>
+      <div class="ph-res">
+        <template x-for="r in $store.wf.planetInfo($store.wf.view).res" :key="r[0]">
+          <span :class="$store.wf.focus === r[0] && 'hit'"><img x-show="r[1]" :src="$store.wf.img(r[1])" alt="" /><span x-text="r[0]"></span></span>
         </template>
-        <div x-show="!$store.wf.plannerList().length" class="p-4 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
       </div>
+      <button class="wf-btn mt-2" @click="$store.wf.closePlanet()" x-text="'‹ ' + $store.wf.t('back')"></button>
+    </div>
+  </template>
 
-      <div class="border-t border-line max-h-[42%] flex flex-col min-h-0">
-        <div class="px-4 pt-3 pb-2">
-          <div class="flex items-baseline justify-between">
-            <h3 class="text-[11px] font-mono tracking-[0.2em] uppercase text-hot" x-text="$store.wf.t('best_spots')"></h3>
-            <span class="text-[11px] text-dim" x-show="$store.wf.selList.length" x-text="$store.wf.t('selected') + ': ' + $store.wf.selList.length"></span>
-          </div>
-          <p x-show="$store.wf.ranking.length" class="text-[11px] text-dim mt-1 leading-snug" x-text="$store.wf.t('best_hint')"></p>
-        </div>
-        <div class="overflow-y-auto min-h-0 px-2 pb-3">
-          <div x-show="!$store.wf.selList.length" class="px-2 text-xs text-dim" x-text="$store.wf.t('nothing_sel')"></div>
-          <template x-for="(h, i) in $store.wf.ranking" :key="h.node.key">
-            <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="w-full text-left px-2 py-1.5 hover:bg-panel flex gap-2 items-start">
-              <span class="font-mono text-[11px] text-dim w-5 pt-0.5" x-text="i + 1"></span>
-              <span class="flex-1 min-w-0">
-                <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
-                <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + ' · ' + h.lines.map(l => l.name.replace(/ Relic.*$/, '')).join(', ')"></span>
-              </span>
-              <span class="font-mono text-xs text-hot pt-0.5" x-text="$store.wf.fmt(h.eff)"></span>
+  <aside class="wf-panel panel-left" x-show="$store.wf.loaded" x-cloak :class="$store.wf.panel==='left' && 'open'">
+    <div class="wf-head">
+      <h2 x-text="$store.wf.t('planner')"></h2>
+      <button x-show="$store.wf.selList.length" @click="$store.wf.clearSel()" class="wf-link" x-text="$store.wf.t('clear')"></button>
+      <button class="wf-close lg:hidden" @click="$store.wf.panel=null" :aria-label="$store.wf.t('close')">×</button>
+    </div>
+    <div class="px-4 pb-3 space-y-3">
+      <p class="text-xs text-dim leading-relaxed" x-text="$store.wf.t('planner_hint')"></p>
+      <div class="wf-tabs">
+        <button @click="$store.wf.tab='prime'" :class="$store.wf.tab==='prime' && 'on'" x-text="$store.wf.t('tab_prime')"></button>
+        <button @click="$store.wf.tab='frames'" :class="$store.wf.tab==='frames' && 'on'" x-text="$store.wf.t('tab_frames')"></button>
+      </div>
+      <input type="search" x-model="$store.wf.filter" :placeholder="$store.wf.t('filter')" class="wf-input" />
+    </div>
+
+    <div class="wf-scroll flex-1">
+      <template x-for="item in $store.wf.plannerList()" :key="item.pre + item.name">
+        <div class="wf-item" :class="$store.wf.someSel(item) && 'sel'">
+          <div class="flex items-center gap-2 px-3 py-1.5">
+            <button @click="$store.wf.open[item.name] = !$store.wf.open[item.name]" class="flex items-center gap-2 flex-1 min-w-0 text-left">
+              <img :src="$store.wf.img(item.img)" alt="" loading="lazy" class="w-8 h-8 object-contain shrink-0" onerror="this.style.visibility='hidden'" />
+              <span class="text-sm truncate" x-text="item.name"></span>
             </button>
-          </template>
-        </div>
-      </div>
-    </aside>
-
-    <section id="map-pane" class="pane relative overflow-hidden bg-[#08060a]" :class="$store.wf.view && 'has-view'">
-
-      <div x-show="!$store.wf.view" class="absolute inset-0 flex items-center justify-center"
-           x-html="$store.wf.mapHtml"
-           @mousemove="$store.wf.mapOver($event)" @mouseleave="$store.wf.mapLeave()"
-           @click="$store.wf.mapClick($event)" @keydown="$store.wf.mapKey($event)"></div>
-
-      <div x-show="!$store.wf.view" class="absolute left-3 bottom-3 text-[11px] text-dim space-y-1 pointer-events-none">
-        <div x-show="$store.wf.planHits.size" class="flex items-center gap-2"><i class="legend-dot border-hot"></i><span x-text="$store.wf.t('your')"></span></div>
-        <div x-show="$store.wf.focus" class="flex items-center gap-2"><i class="legend-dot border-gold border-dashed"></i><span x-text="$store.wf.focus"></span></div>
-        <div x-text="$store.wf.t('click_hint')"></div>
-      </div>
-
-      <template x-if="$store.wf.view">
-        <div class="absolute inset-0 flex flex-col">
-          <div class="planet-head" :style="'--pc:' + ($store.wf.layout().find(p => p.name === $store.wf.view) || {}).color">
-            <button @click="$store.wf.closePlanet()" class="text-xs text-dim hover:text-hot whitespace-nowrap" x-text="'← ' + $store.wf.t('back')"></button>
-            <div class="min-w-0">
-              <h2 class="text-xl font-extrabold tracking-[0.25em] uppercase" x-text="$store.wf.planetName($store.wf.view)"></h2>
-              <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                <template x-for="r in $store.wf.planetInfo($store.wf.view).res" :key="r[0]">
-                  <span class="flex items-center gap-1 text-[11px]" :class="$store.wf.focus === r[0] ? 'text-gold' : 'text-dim'">
-                    <img x-show="r[1]" :src="$store.wf.img(r[1])" alt="" class="w-4 h-4 object-contain" /><span x-text="r[0]"></span>
-                  </span>
-                </template>
-              </div>
-            </div>
+            <button @click="$store.wf.toggleSet(item)" class="wf-chip" :class="$store.wf.allSel(item) && 'on'" x-text="$store.wf.t('full_set')"></button>
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto p-4">
-            <div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
-              <template x-for="nd in $store.wf.planetNodes()" :key="nd.key">
-                <button class="node-tile" @click="$store.wf.pin(nd.key)"
-                  :class="{ 'is-plan': $store.wf.planHits.get(nd.key), 'is-find': $store.wf.findHits.get(nd.key), 'is-pinned': $store.wf.pinned === nd.key }"
-                  @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(nd))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()">
-                  <span class="flex items-center gap-2">
-                    <i class="node-dia"></i>
-                    <span class="text-sm font-semibold truncate" x-text="nd.n"></span>
-                  </span>
-                  <span class="text-[11px] text-dim" x-text="$store.wf.typeName(nd.t) || '—'"></span>
-                  <span class="flex gap-2 text-[11px] font-mono">
-                    <span x-show="$store.wf.planHits.get(nd.key)" class="text-hot" x-text="$store.wf.fmt(($store.wf.planHits.get(nd.key) || {}).eff)"></span>
-                    <span x-show="$store.wf.findHits.get(nd.key)" class="text-gold" x-text="$store.wf.fmt(($store.wf.findHits.get(nd.key) || {}).eff)"></span>
-                  </span>
-                </button>
-              </template>
-            </div>
-          </div>
-        </div>
-      </template>
-    </section>
-
-    <aside id="details" class="pane border-l border-line">
-
-      <template x-if="$store.wf.pinnedNode()">
-        <div class="flex flex-col min-h-0 flex-1">
-          <div class="p-4 pb-2 border-b border-line flex items-start gap-2">
-            <div class="flex-1 min-w-0">
-              <div class="text-[11px] font-mono tracking-[0.2em] uppercase text-hot" x-text="$store.wf.t('node_details')"></div>
-              <div class="text-lg font-bold truncate" x-text="$store.wf.pinnedNode().n"></div>
-              <div class="text-xs text-dim" x-text="$store.wf.planetName($store.wf.pinnedNode().p) + ' · ' + ($store.wf.typeName($store.wf.pinnedNode().t) || '—')"></div>
-            </div>
-            <button @click="$store.wf.pinned = null" class="text-dim hover:text-hot text-lg leading-none" :aria-label="$store.wf.t('close')">×</button>
-          </div>
-          <div class="overflow-y-auto min-h-0 flex-1 p-3 space-y-3">
-            <template x-for="g in $store.wf.nodeGroups($store.wf.pinnedNode())" :key="g.rot">
-              <div>
-                <div x-show="g.rot" class="text-[11px] font-mono text-dim mb-1" x-text="$store.wf.t('rot') + ' ' + g.rot"></div>
-                <template x-for="r in g.rows" :key="r.it.name">
-                  <div class="drop-row" :class="$store.wf.isWanted($store.wf.pinnedNode(), r.it) && 'want'">
-                    <img :src="$store.wf.itemImg(r.it)" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
-                    <span class="flex-1 min-w-0">
-                      <span class="block truncate text-sm" x-text="(r.qty ? r.qty + ' ' : '') + r.it.name"></span>
-                      <span class="block text-[10px]" :style="'color:' + $store.wf.kindColor(r.it.kind)" x-text="$store.wf.kindName(r.it.kind)"></span>
-                    </span>
-                    <span class="font-mono text-xs text-dim" x-text="$store.wf.fmt(r.ch)"></span>
-                  </div>
-                </template>
-              </div>
+          <div x-show="$store.wf.open[item.name] || $store.wf.filter.length > 1" class="px-3 pb-2 pl-[52px] flex flex-wrap gap-1">
+            <template x-for="p in item.parts" :key="p.name">
+              <button @click="$store.wf.toggle(item.pre, p.name)" class="wf-chip" :class="$store.wf.isSel(item.pre, p.name) && 'on'" x-text="p.short"></button>
             </template>
           </div>
         </div>
       </template>
+      <div x-show="!$store.wf.plannerList().length" class="p-4 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
+    </div>
 
-      <div x-show="!$store.wf.pinnedNode()" class="flex flex-col min-h-0 flex-1">
-        <div class="p-4 pb-3 space-y-2 border-b border-line">
-          <h2 class="text-[11px] font-mono tracking-[0.2em] uppercase text-gold" x-text="$store.wf.t('search')"></h2>
-          <input type="search" x-model.debounce.150ms="$store.wf.q" :placeholder="$store.wf.t('search_ph')"
-            class="w-full bg-panel border border-line px-3 py-2 text-sm placeholder:text-dim/60 focus:outline-none focus:border-gold" />
-          <p x-show="$store.wf.q.length < 2 && !$store.wf.focus" class="text-[11px] text-dim" x-text="$store.wf.t('search_hint')"></p>
-        </div>
+    <div class="spots">
+      <div class="wf-head pt-3">
+        <h3 x-text="$store.wf.t('best_spots')"></h3>
+        <span class="text-[11px] text-dim" x-show="$store.wf.selList.length" x-text="$store.wf.t('selected') + ' ' + $store.wf.selList.length"></span>
+      </div>
+      <p x-show="$store.wf.ranking.length" class="px-4 text-[11px] text-dim leading-snug pb-1" x-text="$store.wf.t('best_hint')"></p>
+      <div class="wf-scroll px-2 pb-3">
+        <div x-show="!$store.wf.selList.length" class="px-2 text-xs text-dim" x-text="$store.wf.t('nothing_sel')"></div>
+        <template x-for="(h, i) in $store.wf.ranking" :key="h.node.key">
+          <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="wf-row">
+            <span class="wf-rank" x-text="i + 1"></span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
+              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + ' · ' + h.lines.map(l => l.name.replace(/ Relic.*$/, '')).join(', ')"></span>
+            </span>
+            <span class="wf-pct text-gold" x-text="$store.wf.fmt(h.eff)"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+  </aside>
 
-        <div x-show="$store.wf.q.length >= 2" class="overflow-y-auto min-h-0 max-h-[45%] border-b border-line">
-          <template x-for="e in $store.wf.results()" :key="e.kind + e.name">
-            <button @click="$store.wf.pick(e)" class="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-panel"
-              :class="$store.wf.focus === e.name && 'bg-panel2'">
-              <img :src="e.img" alt="" loading="lazy" class="w-7 h-7 object-contain shrink-0" onerror="this.style.visibility='hidden'" />
-              <span class="flex-1 min-w-0">
-                <span class="block text-sm truncate" :class="$store.wf.focus === e.name && 'text-gold'" x-text="e.name"></span>
-                <span class="block text-[10px]" :style="'color:' + $store.wf.kindColor(e.kind)" x-text="$store.wf.kindName(e.kind) + (e.kind === 'prime' ? ' · ' + ($store.wf.isSel('p:', e.name) ? $store.wf.t('in_plan') : $store.wf.t('add_plan')) : '')"></span>
-              </span>
-            </button>
-          </template>
-          <div x-show="!$store.wf.results().length" class="p-3 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
-        </div>
-
-        <div x-show="$store.wf.focus" class="overflow-y-auto min-h-0 flex-1">
-          <div class="px-4 pt-3 pb-1 flex items-baseline justify-between gap-2">
-            <h3 class="text-sm font-bold text-gold truncate" x-text="$store.wf.focus"></h3>
-            <button @click="$store.wf.setFocus(null)" class="text-[11px] text-dim hover:text-hot shrink-0" x-text="'× ' + $store.wf.t('clear')"></button>
+  <aside class="wf-panel panel-right" x-show="$store.wf.loaded" x-cloak :class="$store.wf.panel==='right' && 'open'">
+    <template x-if="$store.wf.pinnedNode()">
+      <div class="flex flex-col min-h-0 flex-1">
+        <div class="wf-head items-start">
+          <div class="flex-1 min-w-0">
+            <h2 x-text="$store.wf.t('node_details')"></h2>
+            <div class="node-title" x-text="$store.wf.pinnedNode().n"></div>
+            <div class="text-xs text-dim" x-text="$store.wf.planetName($store.wf.pinnedNode().p) + ' · ' + ($store.wf.typeName($store.wf.pinnedNode().t) || '—')"></div>
           </div>
-          <template x-for="p in $store.wf.focusResPlanets()" :key="p">
-            <button @click="$store.wf.openPlanet(p)" class="w-full text-left px-4 py-1.5 hover:bg-panel">
-              <span class="block text-sm" x-text="$store.wf.planetName(p)"></span>
-              <span class="block text-[11px] text-dim" x-text="$store.wf.t('planet_res') + ' — ' + $store.wf.t('from_enemies')"></span>
-            </button>
-          </template>
-          <div x-show="$store.wf.findHits.size" class="px-4 pt-2 text-[11px] font-mono tracking-widest uppercase text-dim" x-text="$store.wf.t('drops_at')"></div>
-          <template x-for="h in $store.wf.focusList()" :key="h.node.key">
-            <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="w-full text-left px-4 py-1.5 hover:bg-panel flex gap-2 items-start">
-              <span class="flex-1 min-w-0">
-                <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
-                <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + (h.qty ? ' · ' + h.qty : '') + (h.via ? ' · ' + h.via : '')"></span>
-              </span>
-              <span class="font-mono text-xs text-gold pt-0.5" x-text="$store.wf.fmt(h.eff)"></span>
-            </button>
+          <button @click="$store.wf.pinned = null; $store.wf.emit()" class="wf-close" :aria-label="$store.wf.t('close')">×</button>
+        </div>
+        <div class="wf-scroll flex-1 px-3 pb-3 space-y-3">
+          <template x-for="g in $store.wf.nodeGroups($store.wf.pinnedNode())" :key="g.rot">
+            <div>
+              <div x-show="g.rot" class="wf-sub" x-text="$store.wf.t('rot') + ' ' + g.rot"></div>
+              <template x-for="r in g.rows" :key="r.it.name">
+                <div class="drop-row" :class="$store.wf.isWanted($store.wf.pinnedNode(), r.it) && 'want'">
+                  <img :src="$store.wf.itemImg(r.it)" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
+                  <span class="flex-1 min-w-0">
+                    <span class="block truncate text-sm" x-text="(r.qty ? r.qty + ' ' : '') + r.it.name"></span>
+                    <span class="block text-[10px] uppercase tracking-wider" :style="'color:' + $store.wf.kindColor(r.it.kind)" x-text="$store.wf.kindName(r.it.kind)"></span>
+                  </span>
+                  <span class="wf-pct text-dim" x-text="$store.wf.fmt(r.ch)"></span>
+                </div>
+              </template>
+            </div>
           </template>
         </div>
       </div>
-    </aside>
-  </main>
+    </template>
 
-  <footer class="border-t border-line px-4 py-2 text-[11px] text-dim flex flex-wrap gap-x-4">
-    <span class="font-bold text-txt tracking-[0.2em]">TENNO <span class="text-hot">ATLAS</span></span>
-    <span x-text="$store.wf.t('footer')"></span>
-    <span class="ml-auto">© Digital Extremes Ltd.</span>
-  </footer>
+    <div x-show="!$store.wf.pinnedNode()" class="flex flex-col min-h-0 flex-1">
+      <div class="wf-head">
+        <h2 x-text="$store.wf.t('search')"></h2>
+        <button class="wf-close lg:hidden" @click="$store.wf.panel=null" :aria-label="$store.wf.t('close')">×</button>
+      </div>
+      <div class="px-4 pb-3 space-y-2">
+        <input type="search" x-model.debounce.150ms="$store.wf.q" :placeholder="$store.wf.t('search_ph')" class="wf-input" />
+        <p x-show="$store.wf.q.length < 2 && !$store.wf.focus" class="text-[11px] text-dim" x-text="$store.wf.t('search_hint')"></p>
+      </div>
+
+      <div x-show="$store.wf.q.length >= 2" class="wf-scroll max-h-[42%] border-y border-line/60">
+        <template x-for="e in $store.wf.results()" :key="e.kind + e.name">
+          <button @click="$store.wf.pick(e)" class="wf-row px-3" :class="$store.wf.focus === e.name && 'on'">
+            <img :src="e.img" alt="" loading="lazy" class="w-8 h-8 object-contain shrink-0" onerror="this.style.visibility='hidden'" />
+            <span class="flex-1 min-w-0">
+              <span class="block text-sm truncate" x-text="e.name"></span>
+              <span class="block text-[10px] uppercase tracking-wider" :style="'color:' + $store.wf.kindColor(e.kind)" x-text="$store.wf.kindName(e.kind) + (e.kind === 'prime' ? ' · ' + ($store.wf.isSel('p:', e.name) ? $store.wf.t('in_plan') : $store.wf.t('add_plan')) : '')"></span>
+            </span>
+          </button>
+        </template>
+        <div x-show="!$store.wf.results().length" class="p-3 text-sm text-dim" x-text="$store.wf.t('nothing')"></div>
+      </div>
+
+      <div x-show="$store.wf.focus" class="wf-scroll flex-1">
+        <div class="wf-head pt-3">
+          <h3 class="text-cyan truncate normal-case tracking-normal text-sm" x-text="$store.wf.focus"></h3>
+          <button @click="$store.wf.setFocus(null)" class="wf-link" x-text="$store.wf.t('clear')"></button>
+        </div>
+        <template x-for="p in $store.wf.focusResPlanets()" :key="p">
+          <button @click="$store.wf.openPlanet(p)" class="wf-row px-4">
+            <span class="flex-1 min-w-0">
+              <span class="block text-sm" x-text="$store.wf.planetName(p)"></span>
+              <span class="block text-[11px] text-dim" x-text="$store.wf.t('planet_res') + ' — ' + $store.wf.t('from_enemies')"></span>
+            </span>
+          </button>
+        </template>
+        <div x-show="$store.wf.findHits.size" class="wf-sub px-4 pt-2" x-text="$store.wf.t('drops_at')"></div>
+        <template x-for="h in $store.wf.focusList()" :key="h.node.key">
+          <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="wf-row px-4">
+            <span class="flex-1 min-w-0">
+              <span class="block text-sm truncate"><span x-text="h.node.n"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
+              <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.t('rot') + ' ' + h.rot : '') + (h.qty ? ' · ' + h.qty : '') + (h.via ? ' · ' + h.via : '')"></span>
+            </span>
+            <span class="wf-pct text-cyan" x-text="$store.wf.fmt(h.eff)"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+  </aside>
+
+  <div class="hud-bottom" x-show="$store.wf.loaded" x-cloak>
+    <div class="legend">
+      <span x-show="$store.wf.planHits.size"><i class="lg-dot gold"></i><span x-text="$store.wf.t('your')"></span></span>
+      <span x-show="$store.wf.focus"><i class="lg-dot cyan"></i><span x-text="$store.wf.focus"></span></span>
+      <span class="hidden md:inline" x-text="$store.wf.t('controls')"></span>
+    </div>
+    <div class="zoom">
+      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: 1 }))" aria-label="Zoom in">+</button>
+      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: -1 }))" aria-label="Zoom out">−</button>
+      <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:home'))" :aria-label="$store.wf.t('origin')">⌂</button>
+    </div>
+    <span class="foot" x-text="$store.wf.t('footer')"></span>
+  </div>
 
   <div x-show="$store.wf.tip.show" x-cloak class="map-tip" :style="'left:' + $store.wf.tip.x + 'px;top:' + $store.wf.tip.y + 'px'" x-html="$store.wf.tip.html"></div>
-
-  <div x-show="$store.wf.toast" x-cloak x-transition class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-panel2 border border-haz px-4 py-2 text-sm" x-text="$store.wf.toast"></div>
+  <div x-show="$store.wf.toast" x-cloak x-transition class="toast" x-text="$store.wf.toast"></div>
 
   <script src="js/atlas.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <script type="module" src="js/starchart.js"></script>
 </body>
 </html>

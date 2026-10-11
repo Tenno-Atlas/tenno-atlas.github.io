@@ -3,8 +3,8 @@ const P = require('../data/primes.json');
 let fail = 0;
 const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fail++; };
 
-const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'js', 'atlas.js'), 'utf8');
-const layout = new Set([...src.matchAll(/\['([^']+)', \d+, \d+, \d+, '#/g)].map((m) => m[1]));
+const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'js', 'starchart.js'), 'utf8');
+const layout = new Set([...src.matchAll(/\{ name: '([^']+)'/g)].map((m) => m[1]));
 const planets = new Set(A.nodes.map((n) => n.p));
 const missing = [...planets].filter((p) => !layout.has(p));
 ok(missing.length === 0, `every planet with nodes is on the map${missing.length ? ' — missing: ' + missing.join(', ') : ''}`);

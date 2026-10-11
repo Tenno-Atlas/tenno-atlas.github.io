@@ -13,9 +13,10 @@
       drops_at: 'Where it drops', planet_res: 'Planet resource', from_enemies: 'drops from enemies & containers on the planet',
       add_plan: 'Add to planner', in_plan: 'In planner',
       back: 'Star chart', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
-      rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to open its nodes',
+      rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to fly to it',
       your: 'Your drops', more: 'more', data_sync: 'Data', footer: 'Fan project · not affiliated with Digital Extremes',
-      updated: 'Data refreshed',
+      updated: 'Data refreshed', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
+      controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
     },
     ru: {
@@ -29,9 +30,10 @@
       drops_at: 'Где падает', planet_res: 'Ресурс планеты', from_enemies: 'падает с врагов и ящиков на планете',
       add_plan: 'В планировщик', in_plan: 'В планировщике',
       back: 'Звёздная карта', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
-      rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы открыть её узлы',
+      rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы подлететь',
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные', footer: 'Фан-проект · не связан с Digital Extremes',
-      updated: 'Данные обновлены',
+      updated: 'Данные обновлены', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
+      controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
     },
   };
@@ -52,19 +54,8 @@
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
   };
 
-  const LAYOUT = [
-    ['Sedna', 470, 70, 15, '#c7b3a1'], ['Phobos', 625, 120, 11, '#9c8576'], ['Veil Proxima', 880, 95, 12, '#6f86c9'],
-    ['Höllvania', 120, 95, 13, '#c45a7c'], ['Kuva Fortress', 285, 185, 13, '#b8323e'], ['Ceres', 420, 170, 12, '#8a8f99'],
-    ['Mars', 600, 215, 15, '#c4562f'], ['Eris', 760, 200, 14, '#7f9a52'], ['Deimos', 510, 255, 12, '#a3486a'],
-    ['Void', 150, 300, 15, '#d9c56b'], ['Europa', 275, 315, 13, '#a9c9d9'], ['Jupiter', 385, 300, 22, '#d1a074'],
-    ['Earth', 640, 330, 17, '#4b8ccc'], ['Lua', 720, 355, 10, '#cfcfd6'], ['Pluto', 845, 330, 13, '#9db0c6'],
-    ['Mercury', 470, 405, 11, '#a7958a'], ['Venus', 575, 440, 15, '#d8b267'], ['Zariman', 150, 460, 13, '#7fd1c7'],
-    ['Saturn', 330, 470, 19, '#cdb486'], ['Duviri', 870, 470, 14, '#d07fb5'], ['Neptune', 690, 540, 16, '#4c6fd6'],
-    ['Uranus', 465, 560, 15, '#7ec2c8'], ['Sanctuary', 860, 590, 10, '#e3e3e3'],
-  ].map(([name, x, y, r, color]) => ({ name, x, y, r, color }));
-
   const KIND_ORDER = ['relic', 'frame', 'gear', 'resource', 'currency', 'other'];
-  const KIND_COLOR = { relic: '#e8455c', frame: '#ece0cb', gear: '#c9a46a', resource: '#7fb0a8', currency: '#a3938b', other: '#8a7a9e', prime: '#e8455c' };
+  const KIND_COLOR = { relic: '#e3b45e', frame: '#e9eef2', gear: '#c9b48a', resource: '#7fd0e6', currency: '#8a9aa6', other: '#a99bd6', prime: '#e3b45e' };
 
   const safe = (fn, d) => { try { return fn(); } catch (e) { return d; } };
   const lsGet = (k) => safe(() => localStorage.getItem(k), null);
@@ -72,10 +63,6 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const relicBase = (n) => n.replace(/ Relic.*$/, '');
   const round = (n) => Math.round(n * 100) / 100;
-
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const STARS = Array.from({ length: 170 }, () => `<circle cx="${(rnd() * 1000).toFixed(1)}" cy="${(rnd() * 640).toFixed(1)}" r="${(rnd() * 1.1 + 0.2).toFixed(2)}" opacity="${(rnd() * 0.6 + 0.15).toFixed(2)}"/>`).join('');
 
   document.addEventListener('alpine:init', () => {
     window.Alpine.store('wf', {
@@ -90,7 +77,7 @@
       pinned: null,
       tip: { show: false, x: 0, y: 0, html: '' },
 
-      planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, mapHtml: '',
+      planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, panel: null,
 
       async load(silent) {
         try {
@@ -118,7 +105,8 @@
       kindName(k) { return (I18N[this.lang].kind || {})[k] || k; },
       planetName(p) { return this.lang === 'ru' ? (PLANET_RU[p] || p) : p; },
       typeName(t) { return !t ? '' : this.lang === 'ru' ? (TYPE_RU[t] || t) : t; },
-      toggleLang() { this.lang = this.lang === 'en' ? 'ru' : 'en'; lsSet('wf_lang', this.lang); this.renderMap(); },
+      toggleLang() { this.lang = this.lang === 'en' ? 'ru' : 'en'; lsSet('wf_lang', this.lang); this.emit(); },
+      emit() { window.dispatchEvent(new CustomEvent('atlas:update')); },
 
       img(name) { return name ? this.A.cdn + encodeURIComponent(name) : ''; },
       itemImg(it) {
@@ -128,7 +116,6 @@
       fmt(n) { return n == null ? '' : (Math.round(n * 100) / 100) + '%'; },
       kindColor(k) { return KIND_COLOR[k] || '#a3938b'; },
       dateStr() { return this.generatedAt ? new Date(this.generatedAt).toLocaleDateString(this.lang === 'ru' ? 'ru-RU' : 'en-GB') : ''; },
-      layout() { return LAYOUT; },
 
       buildFrames() {
         const map = new Map();
@@ -197,7 +184,7 @@
         this.planHits = hits;
         this.ranking = [...hits.values()].sort((a, b) => b.eff - a.eff).slice(0, 40);
         this.planPlanets = this.byPlanet(hits);
-        this.renderMap();
+        this.emit();
       },
       byPlanet(hits) {
         const out = {};
@@ -250,23 +237,27 @@
         }
         this.findHits = hits;
         this.findPlanets = planets;
-        this.renderMap();
+        this.emit();
       },
       focusList() { return [...this.findHits.values()].sort((a, b) => b.eff - a.eff).slice(0, 60); },
       focusResPlanets() { return Object.keys(this.findPlanets); },
 
       openPlanet(p, nodeKey) {
         this.view = p; this.hideTip();
-        if (nodeKey) this.pinned = nodeKey;
-        const el = document.getElementById('map-pane');
-        if (el && window.innerWidth < 1024) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (nodeKey) { this.pinned = nodeKey; if (window.innerWidth < 1024) this.panel = 'right'; }
+        else if (window.innerWidth < 1024) this.panel = null;
+        window.dispatchEvent(new CustomEvent('atlas:fly', { detail: { planet: p, node: nodeKey || null } }));
       },
       pin(key) {
         this.pinned = key; this.hideTip();
-
-        if (window.innerWidth < 1024) setTimeout(() => { const el = document.getElementById('details'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+        if (window.innerWidth < 1024) this.panel = 'right';
+        this.emit();
       },
-      closePlanet() { this.view = null; this.hideTip(); },
+      closePlanet() {
+        this.view = null; this.pinned = null; this.hideTip();
+        window.dispatchEvent(new CustomEvent('atlas:fly', { detail: { planet: null } }));
+      },
+      togglePanel(p) { this.panel = this.panel === p ? null : p; },
       planetNodes() {
         if (!this.view) return [];
         const nodes = this.A.nodes.filter((n) => n.p === this.view);
@@ -336,38 +327,6 @@
         return h;
       },
 
-      renderMap() {
-        const orbits = [70, 130, 195, 265, 340, 420].map((r) => `<ellipse cx="500" cy="330" rx="${r * 1.25}" ry="${r * 0.72}" class="orbit"/>`).join('');
-        let planets = '';
-        for (const pl of LAYOUT) {
-          const plan = this.planPlanets[pl.name];
-          const find = [...this.findHits.values()].some((h) => h.node.p === pl.name) || this.findPlanets[pl.name];
-          const dim = (this.planHits.size || this.findHits.size || Object.keys(this.findPlanets).length) && !plan && !find;
-          const label = esc(this.planetName(pl.name).toUpperCase());
-          planets += `<g class="planet${dim ? ' dim' : ''}" data-planet="${esc(pl.name)}" tabindex="0" role="button" aria-label="${esc(this.planetName(pl.name))}">`
-            + `<circle cx="${pl.x}" cy="${pl.y}" r="${pl.r + 16}" class="hitbox"/>`
-            + (plan ? `<circle cx="${pl.x}" cy="${pl.y}" r="${pl.r + 9}" class="ring-plan"/>` : '')
-            + (find ? `<circle cx="${pl.x}" cy="${pl.y}" r="${pl.r + (plan ? 14 : 9)}" class="ring-find"/>` : '')
-            + `<circle cx="${pl.x}" cy="${pl.y}" r="${pl.r}" fill="url(#g-${pl.name.replace(/\W/g, '')})" class="body"/>`
-            + `<text x="${pl.x}" y="${pl.y + pl.r + 17}" class="label">${label}</text>`
-            + (plan ? `<g class="badge"><rect x="${pl.x + pl.r - 2}" y="${pl.y - pl.r - 14}" width="${String(plan.count).length * 7 + 10}" height="15"/><text x="${pl.x + pl.r + 3}" y="${pl.y - pl.r - 3}">${plan.count}</text></g>` : '')
-            + '</g>';
-        }
-        const grads = LAYOUT.map((pl) => `<radialGradient id="g-${pl.name.replace(/\W/g, '')}" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".18" stop-color="${pl.color}"/><stop offset="1" stop-color="#0d0a0b"/></radialGradient>`).join('');
-        this.mapHtml = `<svg viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet" class="starmap" role="img" aria-label="Star chart">`
-          + `<defs>${grads}<radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff3d6"/><stop offset=".25" stop-color="#f0b46a" stop-opacity=".55"/><stop offset="1" stop-color="#c0233f" stop-opacity="0"/></radialGradient></defs>`
-          + `<g class="stars">${STARS}</g><g>${orbits}</g><circle cx="500" cy="330" r="60" fill="url(#sun)"/><circle cx="500" cy="330" r="7" fill="#fff6e3"/>`
-          + planets + '</svg>';
-      },
-      mapOver(ev) {
-        const g = ev.target.closest && ev.target.closest('[data-planet]');
-        if (!g) { this.hideTip(); return; }
-        if (this._tipFor !== g.dataset.planet || !this.tip.show) { this._tipFor = g.dataset.planet; this.showTip(ev, this.planetTip(g.dataset.planet)); }
-        else this.moveTip(ev);
-      },
-      mapLeave() { this._tipFor = null; this.hideTip(); },
-      mapClick(ev) { const g = ev.target.closest && ev.target.closest('[data-planet]'); if (g) this.openPlanet(g.dataset.planet); },
-      mapKey(ev) { const g = ev.target.closest && ev.target.closest('[data-planet]'); if (g && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); this.openPlanet(g.dataset.planet); } },
       pinnedNode() { return this.pinned ? this.nodeByKey.get(this.pinned) : null; },
     });
 
