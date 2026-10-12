@@ -16,10 +16,15 @@
       rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to fly to it',
       your: 'Your drops', more: 'more', data_sync: 'Data',
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
-      about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0); Earth maps: NASA Blue Marble via three.js examples. Item icons and Duviri art: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
+      about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0); Earth maps: NASA Blue Marble via three.js examples. Item icons, world art, live cycles and Ostron/Solaris/Entrati bounties: warframestat.us; Cavia, Holdfasts and Hex bounties: browse.wf; RU bounty names: Warframe Public Export. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
      
       loot_frames: 'Warframes to build', loot_none: 'No warframe parts drop here.', loot_gear: 'Weapons & gear', click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
+      tool_farm: 'Farm', tool_find: 'Search', tool_live: 'Now', where_farm: 'Where to farm', show_all: 'Show all', back_pick: 'Back to the list',
+      cycles: 'Time of day', bounties: 'Syndicate bounties', new_in: 'New in', live_err: 'Live data is unavailable right now', live_hint: 'Updates by itself when a cycle or bounty rotation ends.',
+      late_toggle: 'Late game', planet_btn: 'Planet', rep: 'standing', now_here: 'Now', reward_pool: 'Rewards', open_hub: 'Drop tables',
+      cyc: { day: 'Day', night: 'Night', warm: 'Warm', cold: 'Cold', fass: 'Fass', vome: 'Vome', grineer: 'Grineer', corpus: 'Corpus', joy: 'Joy', anger: 'Anger', envy: 'Envy', sorrow: 'Sorrow', fear: 'Fear' },
+      place: { earth: 'Earth', cetus: 'Plains of Eidolon', vallis: 'Orb Vallis', cambion: 'Cambion Drift', zariman: 'Zariman', duviri: 'Duviri spiral' },
     },
     ru: {
       tagline: 'Карта фарма Warframe', loading: 'Загрузка звёздной карты…', data_error: 'Не удалось загрузить данные',
@@ -35,10 +40,15 @@
       rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы подлететь',
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные',
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
-      about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0); карты Земли: NASA Blue Marble (примеры three.js). Иконки предметов и арт Дувири: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
+      about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0); карты Земли: NASA Blue Marble (примеры three.js). Иконки предметов, арт миров, циклы и задания Острона, Соляриса и Энтрати: warframestat.us; задания Кавии, Неукротимых и Гекса: browse.wf; русские названия заданий: Warframe Public Export. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
      
       loot_frames: 'Варфреймы для сборки', loot_none: 'Здесь не падают части варфреймов.', loot_gear: 'Оружие и снаряжение', click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
+      tool_farm: 'Фарм', tool_find: 'Поиск', tool_live: 'Сейчас', where_farm: 'Где фармить', show_all: 'Показать все', back_pick: 'К списку',
+      cycles: 'Время суток', bounties: 'Задания синдикатов', new_in: 'Новые через', live_err: 'Живые данные сейчас недоступны', live_hint: 'Обновляется само, когда меняется цикл или задания.',
+      late_toggle: 'Поздняя игра', planet_btn: 'Планета', rep: 'репутации', now_here: 'Сейчас', reward_pool: 'Награды', open_hub: 'Таблицы дропа',
+      cyc: { day: 'День', night: 'Ночь', warm: 'Тепло', cold: 'Холод', fass: 'Фэз', vome: 'Воум', grineer: 'Гринир', corpus: 'Корпус', joy: 'Радость', anger: 'Гнев', envy: 'Зависть', sorrow: 'Печаль', fear: 'Страх' },
+      place: { earth: 'Земля', cetus: 'Равнины Эйдолона', vallis: 'Долина Сфер', cambion: 'Камбионский Дрейф', zariman: 'Зариман', duviri: 'Спираль Дувири' },
     },
   };
 
@@ -106,6 +116,27 @@
     return out;
   };
 
+  const LIVE_API = 'https://api.warframestat.us/pc/';
+  const BOUNTY_API = 'https://oracle.browse.wf/bounty-cycle';
+  const CYCLES = [
+    { id: 'earth', api: 'earthCycle', p: 'Earth' },
+    { id: 'cetus', api: 'cetusCycle', p: 'Earth' },
+    { id: 'vallis', api: 'vallisCycle', p: 'Venus' },
+    { id: 'cambion', api: 'cambionCycle', p: 'Deimos' },
+    { id: 'zariman', api: 'zarimanCycle', p: 'Zariman' },
+    { id: 'duviri', api: 'duviriCycle', p: 'Duviri' },
+  ];
+  const SYNDICATES = [
+    { id: 'cetus', ws: 'Ostrons', p: 'Earth', name: ['Ostron', 'Острон'] },
+    { id: 'fortuna', ws: 'Solaris United', p: 'Venus', name: ['Solaris United', 'Объединение Солярис'] },
+    { id: 'necralisk', ws: 'Entrati', p: 'Deimos', name: ['Entrati', 'Энтрати'] },
+    { id: 'sanctum', bc: 'EntratiLabSyndicate', p: 'Deimos', name: ['Cavia', 'Кавия'] },
+    { id: 'chrysalith', bc: 'ZarimanSyndicate', p: 'Zariman', name: ['The Holdfasts', 'Неукротимые'] },
+    { id: 'hex', bc: 'HexSyndicate', p: 'Höllvania', name: ['The Hex', 'Гекс'] },
+  ];
+  const ALLY = { AmirAllyAgent: 'Amir', AoiAllyAgent: 'Aoi', ArthurAllyAgent: 'Arthur', EleanorAllyAgent: 'Eleanor', LettieAllyAgent: 'Lettie', QuincyAllyAgent: 'Quincy' };
+  const HEX_PLAIN = ['SolNode850', 'SolNode853', 'SolNode854', 'SolNode856'];
+
   const KIND_ORDER = ['relic', 'frame', 'gear', 'resource', 'currency', 'other'];
   const KIND_COLOR = { relic: '#e3b45e', frame: '#e9eef2', gear: '#c9b48a', resource: '#7fd0e6', currency: '#8a9aa6', other: '#a99bd6', prime: '#e3b45e' };
 
@@ -132,14 +163,19 @@
 
       planHits: new Map(), planPlanets: {}, ranking: [], findHits: new Map(), findPlanets: {}, panel: null, aboutOpen: false,
       mode: lsGet('wf_mode') === 'late' ? 'late' : 'base',
+      tool: ['farm', 'find', 'live'].includes(lsGet('wf_tool')) ? lsGet('wf_tool') : 'farm',
+      W: { jobs: {}, ch: {}, nodes: {}, allies: {} },
+      live: { cyc: {}, ws: null, bc: null, ok: false, failed: false },
+      liveNext: 0, liveBusy: false, now: Date.now(), liveOpen: { cetus: true }, spotsAll: false,
 
       async load(silent) {
         try {
           const get = (u) => fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(u + ' HTTP ' + r.status); return r.json(); });
-          const [A, P, RU] = await Promise.all([get('data/atlas.json'), get('data/primes.json'), get('data/ru.json').catch(() => ({}))]);
+          const [A, P, RU, W] = await Promise.all([get('data/atlas.json'), get('data/primes.json'), get('data/ru.json').catch(() => ({})), get('data/world.json').catch(() => null)]);
+          if (W) this.W = W;
           const changed = this.generatedAt && this.generatedAt !== A.generatedAt;
           A.nodes = prepNodes(A.nodes);
-          this.A = A; this.P = P; this.RU = RU; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
+          this.A = A; this.P = P; this.RU = RU; this._ruLc = null; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
           this.nodeByKey = new Map(A.nodes.map((n) => [n.key, n]));
           this.hubMap = this.buildHubs(A.nodes);
           if (this.hub && !this.hubMap.has(this.hub)) this.hub = null;
@@ -427,7 +463,7 @@
       planFrame(g) {
         if (!g.set) return;
         this.toggleSet({ ...g.set, pre: 'a:' });
-        this.tab = 'frames';
+        this.tab = 'frames'; this.tool = 'farm'; lsSet('wf_tool', 'farm');
       },
       planetInfo(p) {
         const nodes = this.A.nodes.filter((n) => n.p === p);
@@ -495,6 +531,117 @@
       },
 
       pinnedNode() { return this.pinned ? this.nodeByKey.get(this.pinned) : null; },
+      setTool(t) {
+        if (window.innerWidth < 1024 && this.panel === 'left' && this.tool === t) { this.panel = null; return; }
+        this.tool = t; lsSet('wf_tool', t);
+        if (window.innerWidth < 1024) this.panel = 'left';
+      },
+
+      async loadLive() {
+        if (this.liveBusy) return;
+        this.liveBusy = true;
+        const j = (u) => fetch(u, { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+        const reqs = [j(LIVE_API + 'syndicateMissions?language=en'), j(BOUNTY_API), ...CYCLES.map((c) => j(LIVE_API + c.api + '?language=en'))];
+        const res = await Promise.allSettled(reqs);
+        const val = (i) => (res[i].status === 'fulfilled' ? res[i].value : null);
+        const cyc = { ...this.live.cyc };
+        CYCLES.forEach((c, i) => { const v = val(i + 2); if (v && v.state) cyc[c.id] = v; });
+        this.live = { cyc, ws: val(0) || this.live.ws, bc: val(1) || this.live.bc, ok: true, failed: res.every((r) => r.status === 'rejected') };
+        const now = Date.now();
+        const all = [...Object.values(cyc).map((c) => Date.parse(c.expiry)), ...this.syndicates().map((s) => s.expiry)].filter((t) => t > 0);
+        const ends = all.filter((t) => t > now);
+        const next = all.some((t) => t <= now) ? now : ends.length ? Math.min(...ends) + 4000 : now + 60000;
+        this.liveNext = Math.min(Math.max(next, now + 30000), now + 15 * 60000);
+        this.liveBusy = false;
+        window.dispatchEvent(new CustomEvent('atlas:live'));
+      },
+      tick() {
+        this.now = Date.now();
+        if (this.now >= this.liveNext) this.loadLive();
+        window.dispatchEvent(new CustomEvent('atlas:live'));
+      },
+      left(t) {
+        if (!(t > this.now)) return '…';
+        const ms = t - this.now, s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+        const ru = this.lang === 'ru';
+        if (h) return h + (ru ? 'ч ' : 'h ') + String(m).padStart(2, '0') + (ru ? 'м' : 'm');
+        return m + (ru ? 'м ' : 'm ') + String(x).padStart(2, '0') + (ru ? 'с' : 's');
+      },
+      cycles() {
+        const T = I18N[this.lang];
+        return CYCLES.filter((c) => this.live.cyc[c.id] || (c.id === 'zariman' && this.live.bc && this.live.bc.zarimanFaction)).map((c) => {
+          const v = this.live.cyc[c.id], bc = this.live.bc;
+          if (c.id === 'zariman' && bc && bc.zarimanFaction && bc.expiry > this.now) {
+            const st = bc.zarimanFaction === 'FC_GRINEER' ? 'grineer' : 'corpus';
+            return { id: c.id, p: c.p, place: T.place[c.id], state: st, label: T.cyc[st], expiry: bc.expiry };
+          }
+          return { id: c.id, p: c.p, place: T.place[c.id], state: v.state, label: T.cyc[v.state] || v.state, expiry: Date.parse(v.expiry) };
+        });
+      },
+      cycleOf(p) { return this.cycles().filter((c) => c.p === p && c.id !== 'cetus'); },
+      cycleLine(p) { return this.cycleOf(p).map((c) => c.label + ' · ' + this.left(c.expiry)).join('  '); },
+      ruLc(n) {
+        if (!this._ruLc) { this._ruLc = new Map(); for (const [k, v] of Object.entries(this.RU)) this._ruLc.set(k.toLowerCase(), v); }
+        return this._ruLc.get(n.toLowerCase());
+      },
+      reward(n) {
+        if (this.lang !== 'ru') return n;
+        const direct = this.ruLc(n);
+        if (direct) return direct;
+        const m = n.match(/^([\d,]+)X? (.+)$/);
+        if (m) { const r = this.ruLc(m[2]) || this.ruLc(m[2].replace(/ Blueprint$/, '')); return m[1] + ' ' + (r || m[2]); }
+        return n;
+      },
+      syndicates() {
+        const ru = this.lang === 'ru';
+        const ws = this.live.ws || [], bc = this.live.bc;
+        return SYNDICATES.map((s) => {
+          const hub = [...this.hubMap.values()].find((h) => h.id === s.id) || null;
+          let jobs = [], expiry = 0, note = '';
+          if (s.ws) {
+            const m = ws.find((x) => x.syndicateKey === s.ws || x.syndicate === s.ws);
+            if (m) {
+              expiry = Date.parse(m.expiry);
+              jobs = (m.jobs || []).map((jb) => ({
+                title: ru ? this.W.jobs[jb.type] || jb.type : jb.type,
+                lvl: (jb.enemyLevels || []).join('–'),
+                rep: (jb.standingStages || []).reduce((a, b) => a + b, 0),
+                sub: '',
+                rewards: [...new Set(jb.rewardPool || [])].map((r) => this.reward(r)),
+              }));
+            }
+          } else if (bc && bc.bounties && bc.bounties[s.bc]) {
+            expiry = bc.expiry;
+            if (s.bc === 'ZarimanSyndicate' && bc.zarimanFaction) note = I18N[this.lang].cyc[bc.zarimanFaction === 'FC_GRINEER' ? 'grineer' : 'corpus'];
+            jobs = bc.bounties[s.bc].map((b) => {
+              const c = this.W.ch[b.challenge], n = this.W.nodes[b.node];
+              const node = n ? (ru ? n[1] : n[0]) : b.node;
+              const mt = n && !HEX_PLAIN.includes(b.node) ? (ru ? n[3] : n[2]) : '';
+              const ally = b.ally ? ALLY[b.ally.split('/').pop()] : '';
+              const allyName = ally ? (ru ? this.W.allies[ally] || ally : ally) : '';
+              return {
+                title: c ? (ru ? c[1] : c[0]) : b.challenge.split('/').pop(),
+                lvl: '',
+                rep: 0,
+                sub: [node + (mt ? ' · ' + mt.toLowerCase() : ''), allyName].filter(Boolean).join(' · '),
+                rewards: [],
+              };
+            });
+          }
+          const label = ru ? s.name[1] : s.name[0];
+          const where = hub && this.hubName(hub) !== label ? this.hubName(hub) : this.planetName(s.p);
+          return { ...s, label, where: where + (note ? ' · ' + note : ''), hub, jobs, expiry };
+        }).filter((s) => s.jobs.length);
+      },
+      syndicateOf(hubId) { return this.syndicates().find((s) => s.id === hubId) || null; },
+      hubLive() { const h = this.pinnedHub(); return h ? this.syndicateOf(h.id) : null; },
+      goHub(s) {
+        if (!s.hub) { this.openPlanet(s.p); return; }
+        this.openPlanet(s.hub.p);
+        this.hub = s.hub.key;
+        if (window.innerWidth < 1024) this.panel = 'right';
+        this.emit();
+      },
       WORLDS: [
         { p: 'Duviri', img: 'media/duviri.jpg', tag: 'duviri_tag' },
         { p: 'Höllvania', img: 'media/hollvania.jpg', tag: 'hollvania_tag' },
@@ -511,6 +658,8 @@
 
     const s = window.Alpine.store('wf');
     s.load();
+    s.loadLive();
+    setInterval(() => s.tick(), 1000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) s.refreshIfStale(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (s.pinned) { s.pinned = null; s.emit(); } else if (s.hub) s.closeHub(); else if (s.view) s.closePlanet(); } });
   });

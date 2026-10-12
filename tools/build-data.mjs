@@ -382,7 +382,51 @@ async function loadRuDictionary(enItems) {
   return makeRuTranslator(dict, partWords);
 }
 
+const PEP = 'https://cdn.jsdelivr.net/npm/warframe-public-export-plus/';
+const WSD_LANG = 'https://cdn.jsdelivr.net/npm/warframe-worldstate-data/dist/data/languages.json';
+const WORLD_FILE = join(OUT_DIR, 'world.json');
+
+async function buildWorld() {
+  const get = (u) => fetchWithRetry(u, { json: true });
+  const [en, ru, bounties, challenges, regions, wsd] = await Promise.all([
+    get(PEP + 'dict.en.json'), get(PEP + 'dict.ru.json'), get(PEP + 'ExportBounties.json'),
+    get(PEP + 'ExportChallenges.json'), get(PEP + 'ExportRegions.json'), get(WSD_LANG),
+  ]);
+  const lastLine = (s) => String(s || '').split(/\r?\n/).pop().replace(/\|(OPEN|CLOSE)_COLOR\|/g, '').trim();
+  const byLower = new Map(Object.entries(bounties).map(([k, v]) => [k.toLowerCase(), v]));
+  const jobs = {};
+  for (const [k, v] of Object.entries(wsd)) {
+    if (!k.includes('/jobs/') || !v || !v.value) continue;
+    const b = byLower.get(k);
+    let r = b && ru[b.name];
+    if (!r) continue;
+    if (/\(Narmer\)$/.test(v.value) && !/нармер/i.test(r)) r += ' (Нармер)';
+    jobs[v.value] = r;
+  }
+  for (const c of ['A', 'B', 'C']) jobs['Isolation Vault Chamber ' + c] = 'Камера Изоляции ' + c;
+  const ch = {};
+  for (const [k, c] of Object.entries(challenges)) {
+    if (!/\/Challenges\/(Zariman|EntratiLab|Vania)\//.test(k)) continue;
+    const fill = (s) => lastLine(s).split('|COUNT|').join(String(c.requiredCount ?? ''));
+    ch[k] = [fill(en[c.description]), fill(ru[c.description]) || fill(en[c.description]), lastLine(en[c.name]), lastLine(ru[c.name]) || lastLine(en[c.name])];
+  }
+  const nodes = {};
+  for (const [k, r] of Object.entries(regions)) {
+    if (![21, 23].includes(r.systemIndex) && !/\/Entrati\//.test(r.name)) continue;
+    nodes[k] = [en[r.name] || k, ru[r.name] || en[r.name] || k, en[r.missionName] || '', ru[r.missionName] || ''];
+  }
+  const allies = {};
+  for (const n of ['Amir', 'Aoi', 'Arthur', 'Eleanor', 'Lettie', 'Quincy']) {
+    const key = Object.keys(en).find((k) => k.startsWith('/Lotus/Language/1999/Messenger') && en[k] === n);
+    allies[n] = key ? ru[key] : n;
+  }
+  const world = { jobs, ch, nodes, allies };
+  await writeFile(WORLD_FILE, JSON.stringify(world) + '\n');
+  console.log(`Мир: ${WORLD_FILE} | заданий: ${Object.keys(jobs).length} | испытаний: ${Object.keys(ch).length} | узлов: ${Object.keys(nodes).length}`);
+}
+
 async function main() {
+  try { await buildWorld(); } catch (e) { console.log(`⚠ world.json не обновлён: ${e.message}`); }
   console.log('Загружаю официальный droptable Digital Extremes...');
   const html = await fetchWithRetry(DROPTABLE_URL, { cacheFile: HTML_CACHE });
 

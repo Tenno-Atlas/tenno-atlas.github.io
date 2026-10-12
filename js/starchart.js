@@ -17,7 +17,7 @@ export const SYSTEM = [
   { name: 'Eris', p: at(1415, 350), r: 1.9, tex: 'eris', tint: '#e2b6c2', atmo: '#d7a0c8' },
   { name: 'Deimos', p: at(1035, 405), r: 1.6, kind: 'infested', tentacles: true, c: ['#4a3216', '#13110a', '#ff7a1a'], atmo: '#4a220c' },
   { name: 'Earth', p: at(1210, 540), r: 2.9, tex: 'earth', clouds: true, tint: '#ffffff', atmo: '#7fbfff', night: true },
-  { name: 'Lua', p: at(1290, 560), r: 1.1, tex: 'moon', tint: '#d8d8de', frame: true },
+  { name: 'Lua', p: at(1290, 560), r: 1.25, lua: true },
   { name: 'Pluto', p: at(1600, 535), r: 2.0, tex: 'eris', tint: '#d6e4ff', atmo: '#b8d4ff' },
   { name: 'Jupiter', p: at(580, 535), r: 5.0, tex: 'jupiter', tint: '#ffffff', atmo: '#f0d2a8' },
   { name: 'Europa', p: at(435, 540), r: 1.6, kind: 'ice', c: ['#d9d3a8', '#2f4a48', '#f4f0d8'], atmo: '#cfe8d8' },
@@ -649,23 +649,89 @@ function start() {
     group.add(cloud, core);
   }
 
-  function makeFrame(group, p) {
-    const gold = new THREE.MeshStandardMaterial({ color: 0xe0b866, emissive: 0x2e1f08, roughness: 0.28, metalness: 1 });
-    const frame = new THREE.Group();
-    [[1.42, 0], [1.52, 0.55], [1.62, -0.5]].forEach(([k, a], i) => {
-      const ring = new THREE.Group();
-      ring.add(new THREE.Mesh(new THREE.TorusGeometry(p.r * k, p.r * 0.012, 8, 160), gold));
-      for (let j = 0; j < 8; j++) {
-        const t = (j / 8) * Math.PI * 2;
-        const knot = new THREE.Mesh(new THREE.BoxGeometry(p.r * 0.05, p.r * 0.05, p.r * 0.05), gold);
-        knot.position.set(Math.cos(t) * p.r * k, Math.sin(t) * p.r * k, 0);
-        knot.rotation.z = t;
-        ring.add(knot);
+  function luaGeo() {
+    const rnd = (k) => { const x = Math.sin(k * 78.233 + 12.9898) * 43758.5453; return x - Math.floor(x); };
+    const cells = [];
+    for (let i = 0; i < 52; i++) {
+      const y = 1 - 2 * ((i + 0.5) / 52), rr = Math.sqrt(1 - y * y), a = i * 2.39996 + rnd(i) * 0.9;
+      const c = new THREE.Vector3(Math.cos(a) * rr + (rnd(i + 7) - 0.5) * 0.25, y + (rnd(i + 9) - 0.5) * 0.2, Math.sin(a) * rr + (rnd(i + 11) - 0.5) * 0.25).normalize();
+      const gone = rnd(i + 31) < 0.14;
+      cells.push({ c, h: gone ? -0.09 - rnd(i + 3) * 0.04 : (rnd(i + 5) - 0.4) * 0.045, gone, shade: rnd(i + 13) });
+    }
+    const g = new THREE.SphereGeometry(1, 192, 144);
+    const pos = g.attributes.position, v = new THREE.Vector3(), col = new Float32Array(pos.count * 3);
+    const plate = new THREE.Color(), dark = new THREE.Color('#1d1517'), core = new THREE.Color('#4a2f28'), hi = new THREE.Color('#d2b9c0'), lo = new THREE.Color('#86707a');
+    for (let k = 0; k < pos.count; k++) {
+      v.fromBufferAttribute(pos, k).normalize();
+      let d1 = -2, d2 = -2, best = null;
+      for (const cell of cells) {
+        const d = v.dot(cell.c);
+        if (d > d1) { d2 = d1; d1 = d; best = cell; } else if (d > d2) d2 = d;
       }
-      ring.rotation.set(Math.PI / 2 + a, i * 1.05, 0);
-      frame.add(ring);
+      const edge = Math.min(1, Math.max(0, (d1 - d2) / 0.012));
+      const crack = 1 - edge;
+      const grain = 0.007 * Math.sin(v.x * 31 + v.y * 17) * Math.cos(v.z * 23 - v.x * 11) + 0.004 * Math.sin(v.y * 77 + v.z * 61) * Math.cos(v.x * 53);
+      const r = 1 + best.h * edge - 0.06 * crack + grain;
+      pos.setXYZ(k, v.x * r, v.y * r, v.z * r);
+      if (best.gone) plate.copy(core).lerp(dark, 0.35 + 0.4 * Math.abs(Math.sin(v.y * 40 + v.x * 25)));
+      else plate.copy(lo).lerp(hi, 0.25 + best.shade * 0.6 + grain * 25);
+      plate.lerp(dark, Math.min(1, crack * 1.4));
+      col[k * 3] = plate.r; col[k * 3 + 1] = plate.g; col[k * 3 + 2] = plate.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function makeLua(group, p) {
+    const body = new THREE.Mesh(luaGeo(), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0.05, emissive: 0x150d10 }));
+    body.scale.setScalar(p.r);
+    const tilt = new THREE.Group();
+    tilt.rotation.set(LEAN, 0, 0.12);
+    tilt.add(body);
+    group.add(tilt);
+    halo(group, p.r, '#c9a9b6', 1.05, 0.22);
+    const bone = new THREE.MeshStandardMaterial({ color: 0xe6d6bf, emissive: 0x231a12, roughness: 0.38, metalness: 0.6 });
+    const frame = new THREE.Group();
+    const R = p.r * 1.36, t = p.r * 0.03;
+    frame.add(new THREE.Mesh(new THREE.TorusGeometry(R, t * 1.15, 10, 200), bone));
+    const equator = new THREE.Mesh(new THREE.TorusGeometry(p.r * 1.16, t, 10, 200), bone);
+    equator.rotation.x = Math.PI / 2 - 0.08;
+    frame.add(equator);
+    const meridian = new THREE.Mesh(new THREE.TorusGeometry(p.r * 1.16, t, 10, 200), bone);
+    meridian.rotation.y = Math.PI / 2 - 0.22;
+    frame.add(meridian);
+    [0, 1, 2, 3].forEach((q) => {
+      const a = q * Math.PI / 2;
+      const arm = new THREE.Group();
+      arm.rotation.z = a;
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(t * 1.6, p.r * 0.5, 8), bone);
+      spike.position.set(R + p.r * 0.27, 0, 0);
+      spike.rotation.z = -Math.PI / 2;
+      arm.add(spike);
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(t * 2.2, p.r * 0.34, t * 2.2), bone);
+      brace.position.set(R, 0, 0);
+      arm.add(brace);
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(t * 0.7, t * 0.7, R - p.r * 1.16, 6), bone);
+      strut.position.set((R + p.r * 1.16) / 2, 0, 0);
+      strut.rotation.z = Math.PI / 2;
+      arm.add(strut);
+      frame.add(arm);
     });
+    frame.rotation.set(-0.72, 0, 0.05);
     group.add(frame);
+    const stone = new THREE.MeshStandardMaterial({ color: 0xa08a93, roughness: 0.9, metalness: 0.05, flatShading: true });
+    const rnd = (k) => { const x = Math.sin(k * 45.164 + 94.673) * 43758.5453; return x - Math.floor(x); };
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + rnd(i) * 0.5;
+      const d = p.r * (1.75 + rnd(i + 20) * 0.5);
+      const rock = new THREE.Mesh(rockGeo(i + 70, 1), stone);
+      rock.scale.setScalar(p.r * (0.07 + rnd(i + 40) * 0.1));
+      rock.position.set(Math.cos(a) * d, (rnd(i + 60) - 0.5) * p.r * 0.6, Math.sin(a) * d * 0.75);
+      rock.rotation.set(rnd(i + 1) * 3, rnd(i + 2) * 3, rnd(i + 4) * 3);
+      group.add(rock);
+    }
+    return body;
   }
 
   function fleshGeo() {
@@ -768,7 +834,6 @@ function start() {
       const m = new THREE.MeshBasicMaterial({ color: 0xbfe4ee, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false });
       [1.45, 1.6].forEach((k) => { const r = new THREE.Mesh(new THREE.RingGeometry(p.r * k, p.r * (k + 0.025), 160), m); r.rotation.x = -Math.PI / 2; tilt.add(r); });
     }
-    if (p.frame) makeFrame(group, p);
     if (p.tentacles) makeTentacles(group, p);
     return { body, uniforms };
   }
@@ -782,6 +847,7 @@ function start() {
     else if (p.special === 'zariman') ({ body, spin } = makeZariman(group, p));
     else if (p.special === 'fortress') body = makeFortress(group, p);
     else if (p.special === 'nebula') makeNebula(group, p);
+    else if (p.lua) body = makeLua(group, p);
     else ({ body, uniforms } = makeBody(group, p, i));
     const hit = new THREE.Mesh(new THREE.SphereGeometry(Math.max(p.r * 1.5, 2.2), 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     hit.userData.planet = p.name;
@@ -794,7 +860,7 @@ function start() {
     label.type = 'button';
     label.className = 'pl-label';
     label.dataset.planet = p.name;
-    label.innerHTML = '<span class="pl-ring"></span><span class="pl-name"></span><span class="pl-sub"></span><span class="pl-badge"></span>';
+    label.innerHTML = '<span class="pl-ring"></span><span class="pl-name"></span><span class="pl-sub"></span><span class="pl-cyc"></span><span class="pl-badge"></span>';
     labelLayer.appendChild(label);
     const orbit = p.moving ? { r: Math.hypot(p.p[0], p.p[1]), a: Math.atan2(p.p[1], p.p[0]) } : null;
     planets.set(p.name, { def: p, group, body, uniforms, spin, label, orbit });
@@ -1150,7 +1216,20 @@ function start() {
   labelLayer.addEventListener('mousemove', (ev) => { const s = store(); if (s && ev.target.closest('.pl-label')) s.moveTip(ev); });
   labelLayer.addEventListener('mouseout', (ev) => { const s = store(); if (s && ev.target.closest('.pl-label') && !(ev.relatedTarget && ev.relatedTarget.closest && ev.relatedTarget.closest('.pl-label'))) s.hideTip(); });
 
+  function liveLabels() {
+    const s = store();
+    if (!s) return;
+    planets.forEach((pl, name) => {
+      const el = pl.label.querySelector('.pl-cyc');
+      const c = s.cycleOf(name)[0];
+      if (!c) { if (el.textContent) el.textContent = ''; return; }
+      el.className = 'pl-cyc st-' + c.state;
+      el.innerHTML = '<i></i>' + c.label + ' <em>' + s.left(c.expiry) + '</em>';
+    });
+  }
   window.addEventListener('atlas:update', refresh);
+  window.addEventListener('atlas:update', liveLabels);
+  window.addEventListener('atlas:live', liveLabels);
   window.addEventListener('atlas:fly', (ev) => { const d = ev.detail || {}; if (d.planet) goPlanet(d.planet, d.node); else goHome(); });
   window.addEventListener('atlas:zoom', (ev) => { const k = ev.detail > 0 ? 0.8 : 1.25; const off = camera.position.clone().sub(controls.target).multiplyScalar(k); if (off.length() > controls.minDistance && off.length() < controls.maxDistance) camera.position.copy(controls.target).add(off); });
   window.addEventListener('atlas:home', () => { if (view) { const s = store(); if (s) s.closePlanet(); } else { moved = false; goHome(); } });
