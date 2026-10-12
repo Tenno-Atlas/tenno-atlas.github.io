@@ -287,25 +287,27 @@ body:not(.in-planet) .node-mk { display: none; }
 .part-link em { font-style: normal; color: #c3c8cb; }
 .part-link:hover, .part-link:hover em { color: var(--cyan); }
 
-.duviri-card { position: fixed; z-index: 20; top: calc(var(--top) + 10px); right: 380px; width: 236px; height: 116px; padding: 0; overflow: hidden; background: #0a0c12; border: 1px solid var(--edge-hi); box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6); cursor: pointer; text-align: left; transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s; }
-.duviri-card::before, .duviri-card::after { display: none; }
-.duviri-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); animation: dv-drift 26s ease-in-out infinite alternate; transition: filter 0.3s; filter: saturate(1.08) contrast(1.06) brightness(0.92); }
-.duviri-card:hover img { filter: saturate(1.15) contrast(1.08) brightness(1.08); }
-.duviri-card .dc-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(3, 4, 8, 0.94) 0%, rgba(3, 4, 8, 0.4) 46%, rgba(3, 4, 8, 0) 72%), linear-gradient(100deg, rgba(255, 196, 140, 0.14), rgba(0, 0, 0, 0) 55%); }
-.duviri-card .dc-name { position: absolute; left: 13px; bottom: 23px; font: 600 15px "Cinzel", serif; letter-spacing: 0.34em; text-transform: uppercase; color: #f6e7cd; text-shadow: 0 0 12px #000; }
-.duviri-card .dc-sub { position: absolute; left: 13px; bottom: 9px; font: 400 10px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: #b9a98f; }
-.duviri-card .dc-badge { position: absolute; z-index: 2; right: 8px; top: 8px; min-width: 20px; padding: 1px 6px; text-align: center; background: var(--gold); color: #1a1205; font: 700 11px var(--ui); }
-.duviri-card:hover { border-color: rgba(227, 180, 94, 0.75); box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6), 0 0 22px rgba(227, 180, 94, 0.18); }
-.duviri-card.plan { border-color: var(--gold); box-shadow: 0 0 20px rgba(227, 180, 94, 0.5); }
-.duviri-card.plan .dc-name { color: var(--gold); }
-.duviri-card.find:not(.plan) { border: 1px dashed var(--cyan); box-shadow: 0 0 16px rgba(127, 208, 230, 0.4); }
-.duviri-card.find:not(.plan) .dc-name { color: var(--cyan); }
-.duviri-card.dim { opacity: 0.5; }
+.worlds { position: fixed; z-index: 20; top: calc(var(--top) + 10px); right: 372px; display: flex; flex-direction: column; gap: 8px; }
+.world-card { position: relative; display: block; width: 224px; height: 92px; padding: 0; overflow: hidden; background: #0a0c12; border: 1px solid var(--edge-hi); box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6); cursor: pointer; text-align: left; transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s; }
+.world-card::before, .world-card::after { display: none; }
+.world-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); animation: dv-drift 26s ease-in-out infinite alternate; transition: filter 0.3s; filter: saturate(1.08) contrast(1.06) brightness(0.92); }
+.world-card:hover img { filter: saturate(1.15) contrast(1.08) brightness(1.08); }
+.world-card .dc-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(3, 4, 8, 0.94) 0%, rgba(3, 4, 8, 0.4) 46%, rgba(3, 4, 8, 0) 72%), linear-gradient(100deg, rgba(255, 196, 140, 0.14), rgba(0, 0, 0, 0) 55%); }
+.world-card .dc-name { position: absolute; left: 13px; bottom: 23px; font: 600 15px "Cinzel", serif; letter-spacing: 0.34em; text-transform: uppercase; color: #f6e7cd; text-shadow: 0 0 12px #000; }
+.world-card .dc-sub { position: absolute; left: 13px; bottom: 9px; font: 400 10px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: #b9a98f; }
+.world-card .dc-badge { position: absolute; z-index: 2; right: 8px; top: 8px; min-width: 20px; padding: 1px 6px; text-align: center; background: var(--gold); color: #1a1205; font: 700 11px var(--ui); }
+.world-card:hover { border-color: rgba(227, 180, 94, 0.75); box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6), 0 0 22px rgba(227, 180, 94, 0.18); }
+.world-card.plan { border-color: var(--gold); box-shadow: 0 0 20px rgba(227, 180, 94, 0.5); }
+.world-card.plan .dc-name { color: var(--gold); }
+.world-card.find:not(.plan) { border: 1px dashed var(--cyan); box-shadow: 0 0 16px rgba(127, 208, 230, 0.4); }
+.world-card.find:not(.plan) .dc-name { color: var(--cyan); }
+.world-card.dim { opacity: 0.5; }
 @keyframes dv-drift { from { transform: scale(1.06) translate(0, 0); } to { transform: scale(1.14) translate(-3%, 2%); } }
 @media (max-width: 1023px) {
-  .duviri-card { right: 10px; top: calc(var(--top) + 6px); width: 150px; height: 76px; }
-  .duviri-card .dc-name { font-size: 12px; bottom: 19px; left: 10px; }
-  .duviri-card .dc-sub { left: 10px; bottom: 6px; }
+  .worlds { right: 8px; top: calc(var(--top) + 4px); flex-direction: row; gap: 5px; }
+  .world-card { width: 104px; height: 54px; }
+  .world-card .dc-name { font-size: 9.5px; letter-spacing: 0.16em; bottom: 7px; left: 7px; }
+  .world-card .dc-sub { display: none; }
 }
 
 #chart canvas { transition: filter 0.6s ease; }
@@ -313,8 +315,8 @@ body:not(.in-planet) .node-mk { display: none; }
 body.in-card #chart canvas { filter: blur(4px) brightness(0.42) saturate(0.75); }
 body.in-card #chart-labels { opacity: 0; }
 
-.duviri-view { position: fixed; z-index: 25; left: 50%; top: calc(var(--top) + 150px); transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - var(--top) - 170px); display: flex; flex-direction: column; animation: dv-in 0.5s ease both; }
-@media (min-width: 1024px) { .duviri-view { width: min(720px, calc(100vw - 800px)); } }
+.world-view { position: fixed; z-index: 25; left: 50%; top: calc(var(--top) + 150px); transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - var(--top) - 170px); display: flex; flex-direction: column; animation: dv-in 0.5s ease both; }
+@media (min-width: 1024px) { .world-view { width: min(720px, calc(100vw - 800px)); } }
 .dv-art { position: relative; flex: 0 1 230px; min-height: 90px; overflow: hidden; border: 1px solid var(--edge-hi); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6); }
 .dv-art::before, .dv-art::after { display: none; }
 .dv-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: dv-drift 30s ease-in-out infinite alternate; }
@@ -334,5 +336,7 @@ body.in-card #chart-labels { opacity: 0; }
 .dv-node.find .dv-n, .dv-node.find .dv-t { color: var(--cyan); }
 .dv-node.pinned { outline: 1px solid rgba(255, 255, 255, 0.8); outline-offset: -4px; }
 @keyframes dv-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@media (prefers-reduced-motion: reduce) { .duviri-card img, .dv-art img { animation: none; } .duviri-view { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .world-card img, .dv-art img { animation: none; } .world-view { animation: none; } }
 body.in-card .zoom { display: none; }
+.world-card .dc-name { bottom: 21px; font-size: 13px; letter-spacing: 0.28em; }
+.world-card .dc-sub { bottom: 7px; }

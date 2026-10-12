@@ -12,7 +12,7 @@
       search: 'Drop search', search_ph: 'Resource, part, relic, mod…', search_hint: 'Try: Argon Crystal, Rhino, Neo C8, Orokin Cell',
       drops_at: 'Where it drops', planet_res: 'Planet resource', from_enemies: 'drops from enemies & containers on the planet',
       add_plan: 'Add to planner', in_plan: 'In planner',
-      back: 'Star chart', duviri_tag: 'Another reality · The Duviri Paradox', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
+      back: 'Star chart', duviri_tag: 'Another reality · The Duviri Paradox', hollvania_tag: 'Earth, 1999 · entered through the Pom-2 on the Landing Craft', sanctuary_tag: 'Cephalon Simaris · his Sanctuary in any Relay', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
       rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to fly to it',
       your: 'Your drops', more: 'more', data_sync: 'Data',
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
@@ -31,7 +31,7 @@
       search: 'Поиск дропа', search_ph: 'Ресурс, деталь, реликвия, мод…', search_hint: 'Например: Argon Crystal, Rhino, Neo C8, Orokin Cell',
       drops_at: 'Где падает', planet_res: 'Ресурс планеты', from_enemies: 'падает с врагов и ящиков на планете',
       add_plan: 'В планировщик', in_plan: 'В планировщике',
-      back: 'Звёздная карта', duviri_tag: 'Иная реальность · Парадокс Дувири', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
+      back: 'Звёздная карта', duviri_tag: 'Иная реальность · Парадокс Дувири', hollvania_tag: 'Земля, 1999 · вход через Pom-2 в десантном корабле', sanctuary_tag: 'Цефалон Симарис · его Святилище в любом реле', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
       rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы подлететь',
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные',
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
@@ -46,7 +46,7 @@
     Mercury: 'Меркурий', Venus: 'Венера', Earth: 'Земля', Lua: 'Луа', Mars: 'Марс', Phobos: 'Фобос',
     Deimos: 'Деймос', Ceres: 'Церера', Jupiter: 'Юпитер', Europa: 'Европа', Saturn: 'Сатурн', Uranus: 'Уран',
     Neptune: 'Нептун', Pluto: 'Плутон', Sedna: 'Седна', Eris: 'Эрида', Void: 'Бездна', 'Kuva Fortress': 'Крепость Кувы',
-    Zariman: 'Зариман', Duviri: 'Дувири', 'Höllvania': 'Хёлльвания', 'Veil Proxima': 'Проксима Завесы', Sanctuary: 'Святилище',
+    Zariman: 'Зариман', Duviri: 'Дувири', 'Höllvania': 'Хёлльвания', 'Veil Proxima': 'Проксима Завесы', Sanctuary: 'Святилище Симариса',
   };
   const TYPE_RU = {
     Survival: 'Выживание', Defense: 'Оборона', 'Mobile Defense': 'Мобильная оборона', Interception: 'Перехват',
@@ -54,10 +54,11 @@
     Sabotage: 'Диверсия', Assassination: 'Убийство', Disruption: 'Сбой', Skirmish: 'Стычка', Caches: 'Тайники',
     Bounty: 'Баунти', Defection: 'Перебежчики', Arena: 'Арена', 'Infested Salvage': 'Утилизация заражённых',
     'Void Flood': 'Затопление Бездны', 'Void Cascade': 'Каскад Бездны', 'Void Armageddon': 'Армагеддон Бездны',
-    Alchemy: 'Алхимия', Ascension: 'Вознесение', Recall: 'Отзыв', 'Sanctuary Onslaught': 'Натиск Святилища',
+    Alchemy: 'Алхимия', Ascension: 'Вознесение', Recall: 'Отзыв', 'Sanctuary Onslaught': 'Резня в Святилище',
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
   };
 
+  const NODE_RU = { 'Sanctuary Onslaught': 'Резня в Святилище', 'Elite Sanctuary Onslaught': 'Элитная резня в Святилище' };
   const HUB_ORDER = ['cetus', 'fortuna', 'necralisk', 'sanctum', 'chrysalith', 'hex', 'bounty', 'perita', 'recall', 'railjack'];
   const HUB_TEXT = {
     en: {
@@ -208,7 +209,7 @@
         });
         return { plan, find };
       },
-      nodeLabel(n) { if (!n.hk) return n.n; const h = this.hubMap.get(n.hk); return (h ? this.hubName(h) + ' · ' : '') + (n.lvl ? n.lvl + ' ' : '') + n.short; },
+      nodeLabel(n) { if (!n.hk) return this.lang === 'ru' && NODE_RU[n.n] || n.n; const h = this.hubMap.get(n.hk); return (h ? this.hubName(h) + ' · ' : '') + (n.lvl ? n.lvl + ' ' : '') + n.short; },
       pinnedHub() { return this.hub ? this.hubMap.get(this.hub) || null : null; },
       openHub(key) {
         this.hub = key; this.pinned = null; this.hideTip();
@@ -494,6 +495,12 @@
       },
 
       pinnedNode() { return this.pinned ? this.nodeByKey.get(this.pinned) : null; },
+      WORLDS: [
+        { p: 'Duviri', img: 'media/duviri.jpg', tag: 'duviri_tag' },
+        { p: 'Höllvania', img: 'media/hollvania.jpg', tag: 'hollvania_tag' },
+        { p: 'Sanctuary', img: 'media/sanctuary.jpg', tag: 'sanctuary_tag' },
+      ],
+      world() { return this.WORLDS.find((w) => w.p === this.view) || null; },
       planetHit(p) { return { plan: this.planPlanets[p] || null, find: !!this.findPlanets[p] || [...this.findHits.values()].some((h) => h.node.p === p) }; },
       anyHi() { return !!(this.planHits.size || this.findHits.size || Object.keys(this.findPlanets).length); },
       nodesOf(p) { const key = (n) => (/^Endless/.test(n.n) ? '1' : '0') + n.n.replace('Repeated Rewards', 'Tier 99'); return this.A.nodes.filter((n) => n.p === p).sort((a, b) => key(a).localeCompare(key(b), 'en', { numeric: true })); },

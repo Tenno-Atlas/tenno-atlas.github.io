@@ -15,7 +15,7 @@ export const SYSTEM = [
   { name: 'Phobos', p: at(1240, 278), r: 1.3, tex: 'ceres', tint: '#8c7c62', lumpy: true },
   { name: 'Mars', p: at(1160, 362), r: 2.4, tex: 'mars', tint: '#ffffff', atmo: '#e08a5e' },
   { name: 'Eris', p: at(1415, 350), r: 1.9, tex: 'eris', tint: '#e2b6c2', atmo: '#d7a0c8' },
-  { name: 'Deimos', p: at(1035, 405), r: 1.6, kind: 'infested', c: ['#c8642a', '#2a0e08', '#ffc062'], atmo: '#ff8a3a' },
+  { name: 'Deimos', p: at(1035, 405), r: 1.6, kind: 'infested', tentacles: true, c: ['#4a3216', '#13110a', '#ff7a1a'], atmo: '#4a220c' },
   { name: 'Earth', p: at(1210, 540), r: 2.9, tex: 'earth', clouds: true, tint: '#ffffff', atmo: '#7fbfff', night: true },
   { name: 'Lua', p: at(1290, 560), r: 1.1, tex: 'moon', tint: '#d8d8de', frame: true },
   { name: 'Pluto', p: at(1600, 535), r: 2.0, tex: 'eris', tint: '#d6e4ff', atmo: '#b8d4ff' },
@@ -31,8 +31,8 @@ export const SYSTEM = [
   { name: 'Kuva Fortress', p: at(250, 765), r: 1.7, special: 'fortress', moving: true },
   { name: 'Veil Proxima', p: at(1760, 190), r: 2.4, special: 'nebula' },
   { name: 'Duviri', card: true },
-  { name: 'Höllvania', p: at(1660, 790), r: 1.7, kind: 'city', c: ['#5b3c6c', '#170e21', '#ff6eb4'], atmo: '#c86bff' },
-  { name: 'Sanctuary', p: at(470, 960), r: 1.2, kind: 'holo', c: ['#bfeaff', '#3a6a88', '#ffffff'], atmo: '#9fe2ff' },
+  { name: 'Höllvania', card: true },
+  { name: 'Sanctuary', card: true },
 ];
 
 const KIND = { infested: 4, ice: 3, cloud: 7, city: 8, holo: 9 };
@@ -167,7 +167,7 @@ ${SHADE}
 ${NOISE}
 float height(vec3 p){
   if(uKind==3)return fbm(p*1.6)*0.7+(1.0-smoothstep(0.0,0.04,abs(fbm(p*3.2))))*-0.4;
-  if(uKind==4){float h=fbm(p*2.2);float rg=pow(1.0-abs(snoise(p*3.4+3.0)),5.0);float pu=smoothstep(0.5,0.78,snoise(p*9.0))*smoothstep(-0.1,0.4,h);return h*0.5+rg*0.5+pu*0.35;}
+  if(uKind==4){float h=fbm(p*2.2);float pu=smoothstep(0.62,0.85,snoise(p*8.0))*smoothstep(0.0,0.45,h);return h*0.35+pu*0.12;}
   if(uKind==8)return fbm(p*2.0)*0.6+step(0.55,fract(p.x*9.0))*step(0.55,fract(p.z*9.0))*0.15;
   return 0.0;
 }
@@ -175,10 +175,10 @@ void main(){
   vec3 n=normalize(vObjN);vec3 p=n*2.0+uSeed;vec3 col=uA;vec3 emis=vec3(0.0);float night=0.0;
   vec3 Ng=normalize(vWorldN);vec3 V=normalize(cameraPosition-vWorldPos);vec3 L=sunDir(V);
   if(uKind==3){float h=fbm(p*1.6);col=mix(uB,uA,smoothstep(-0.4,0.5,h+n.x*0.6));float cr=1.0-smoothstep(0.0,0.03,abs(fbm(p*3.2)));col=mix(col,uB*0.5,cr*0.75);col=mix(col,uC,smoothstep(0.3,0.8,fbm(p*5.0))*0.3);}
-  else if(uKind==4){float h=fbm(p*2.2);float rg=pow(1.0-abs(snoise(p*3.4+3.0)),5.0);float fine=fbm(p*9.0);float pu=smoothstep(0.5,0.78,snoise(p*9.0))*smoothstep(-0.1,0.4,h);col=mix(uB,uA,smoothstep(-0.45,0.55,h+fine*0.25));col=mix(col,uA*vec3(1.1,0.55,0.35),rg*0.6);col*=0.75+fine*0.35;col=mix(col,uC,pu*0.7);emis=uC*pu*0.55*(0.75+0.25*sin(uTime*1.1+h*12.0));}
+  else if(uKind==4){float h=fbm(p*2.2);float rg=pow(max(1.0-abs(snoise(p*3.4+3.0)),0.0),18.0);float rg2=pow(max(1.0-abs(snoise(p*7.0+9.0)),0.0),26.0);float fine=fbm(p*9.0);float pu=smoothstep(0.62,0.85,snoise(p*8.0))*smoothstep(0.0,0.45,h);col=mix(uB,uA,smoothstep(-0.45,0.6,h+fine*0.25));col=mix(col,vec3(0.06,0.07,0.02),smoothstep(0.1,0.6,fbm(p*4.0+5.0))*0.6);col*=0.7+fine*0.4;col=mix(col,uC*0.5,pu*0.5);float pulse=0.75+0.25*sin(uTime*1.1+h*12.0);emis=uC*(rg*0.55+rg2*0.3+pu*0.3)*pulse;}
   else if(uKind==7){float w=fbm(p*1.4+vec3(fbm(p*2.0+uTime*0.01)));col=mix(uB,uA,w*0.5+0.55);col=mix(col,uC,smoothstep(0.15,0.85,w)*0.55);}
   else if(uKind==8){float h=fbm(p*2.0);col=mix(uB,uA,h*0.5+0.5);float grid=step(0.92,fract(p.x*14.0))+step(0.92,fract(p.z*14.0));float lights=smoothstep(0.45,0.8,snoise(p*20.0))*smoothstep(-0.2,0.3,fbm(p*3.0));night=lights*2.0+clamp(grid,0.0,1.0)*0.35;}
-  else{float lat=1.0-smoothstep(0.0,0.035,abs(fract(n.y*9.0)-0.5));float lon=1.0-smoothstep(0.0,0.03,abs(fract(atan(n.z,n.x)*1.909859)-0.5));float hex=smoothstep(0.55,0.75,snoise(n*14.0+uTime*0.05));float scan=exp(-pow((n.y-sin(uTime*0.35))*7.0,2.0));float fr=pow(1.0-max(dot(Ng,V),0.0),2.2);col=uA*0.12;emis=uA*(lat+lon)*0.22+uA*hex*0.08+uC*scan*0.25+uA*fr*0.9+uA*0.03;}
+  else{float lat=1.0-smoothstep(0.0,0.035,abs(fract(n.y*9.0)-0.5));float lon=1.0-smoothstep(0.0,0.03,abs(fract(atan(n.z,n.x)*1.909859)-0.5));float hex=smoothstep(0.55,0.75,snoise(n*14.0+uTime*0.05));float sd=(n.y-sin(uTime*0.35))*7.0;float scan=exp(-sd*sd);float fr=pow(1.0-max(dot(Ng,V),0.0),2.2);col=uA*0.12;emis=uA*(lat+lon)*0.22+uA*hex*0.08+uC*scan*0.25+uA*fr*0.9+uA*0.03;}
   vec3 N=Ng;
   if(uKind==3||uKind==4||uKind==8){vec3 eo=normalize(cross(vec3(0.0,1.0,0.0),n)+1e-5);vec3 no=cross(n,eo);float e=0.01;float h0=height(p);float hx=height(p+eo*e*2.0);float hy=height(p+no*e*2.0);N=normalize(Ng-uBump*((hx-h0)*vEast+(hy-h0)*vNorth)/e);}
   vec3 lit=lightUp(col,N,Ng,V,L,uKind==3?0.35:0.06,uKind==3?40.0:14.0);
@@ -219,6 +219,35 @@ gl_FragColor=vec4(pow(c,vec3(2.2))*1.6,1.0);}
 const STAR_VS = `attribute float aSize;attribute vec3 aColor;attribute float aPhase;uniform float uTime;uniform float uPx;varying vec3 vColor;varying float vTw;
 void main(){vColor=aColor;vTw=0.75+0.25*sin(uTime*(0.6+aPhase*1.7)+aPhase*40.0);vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=aSize*uPx;gl_Position=projectionMatrix*mv;}`;
 const STAR_FS = `varying vec3 vColor;varying float vTw;void main(){vec2 q=gl_PointCoord-0.5;float r=length(q)*2.0;float core=exp(-r*r*9.0);float halo=exp(-r*3.5)*0.25;float spike=(exp(-abs(q.x)*40.0)*exp(-abs(q.y)*5.0)+exp(-abs(q.y)*40.0)*exp(-abs(q.x)*5.0))*0.35;float a=(core+halo+spike)*vTw;if(a<0.01)discard;gl_FragColor=vec4(vColor*a,1.0);}`;
+
+const AURORA_VS = `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+const AURORA_FS = `uniform float uTime;uniform float uGain;varying vec2 vUv;
+${NOISE}
+void main(){
+  float n=snoise(vec3(vUv.x*22.0,uTime*0.12,1.7));
+  float n2=snoise(vec3(vUv.x*70.0,uTime*0.25,4.1));
+  float rays=pow(0.5+0.5*sin(vUv.x*240.0+n*7.0+uTime*0.35),2.5)*0.75+pow(0.5+0.5*sin(vUv.x*520.0+n2*5.0-uTime*0.6),6.0)*0.6;
+  float y=clamp(vUv.y,0.0,1.0);float h=1.0-y;
+  float fall=pow(h,2.4)*(0.65+0.35*snoise(vec3(vUv.x*9.0,vUv.y*3.0-uTime*0.08,8.0)));
+  float edge=smoothstep(0.0,0.05,y);
+  float ends=smoothstep(0.0,0.07,vUv.x)*smoothstep(1.0,0.86,vUv.x);
+  float base=exp(-y*38.0)*1.6;
+  float a=((0.15+rays)*fall*edge+base)*ends*uGain;
+  gl_FragColor=vec4(vec3(0.9,0.94,1.0)*clamp(a,0.0,4.0),1.0);
+}`;
+
+const TENT_FS = `
+uniform vec3 uA;uniform vec3 uC;
+${SHADE}
+void main(){
+  vec3 Ng=normalize(vWorldN);vec3 V=normalize(cameraPosition-vWorldPos);vec3 L=sunDir(V);
+  float t=vUv.x;
+  vec3 alb=uA*(0.8+0.2*sin(t*11.0));
+  vec3 col=lightUp(alb,Ng,Ng,V,L,0.15,24.0);
+  col+=uC*pow(smoothstep(0.45,1.0,t),2.0)*1.8+uC*0.35*pow(0.5+0.5*sin(t*30.0-uTime*1.4),10.0)*smoothstep(0.2,0.6,t);
+  gl_FragColor=vec4(col,1.0);
+}
+`;
 
 const SUN_FS = `uniform float uTime;varying vec3 vObjN;varying vec3 vWorldN;varying vec3 vWorldPos;
 ${NOISE}
@@ -371,6 +400,7 @@ function start() {
   scene.add(sun);
 
   const planets = new Map();
+  const timed = [];
   const hitMeshes = [];
   const sphereGeo = new THREE.SphereGeometry(1, 96, 64);
   const lateObjects = [];
@@ -400,28 +430,55 @@ function start() {
     return root;
   }
 
+  const VOID_PATH = [[200, 190], [262, 165], [328, 180], [360, 216], [384, 282], [400, 342], [424, 422], [482, 446], [540, 435], [600, 438], [660, 470], [722, 492], [780, 475], [812, 458], [880, 458], [915, 468]];
   function makeVoid(group, p) {
-    const core = new THREE.Sprite(additive(glowTex([[0, 'rgba(245,250,255,1)'], [0.15, 'rgba(170,200,255,0.6)'], [1, 'rgba(0,0,0,0)']])));
-    core.scale.set(p.r * 2.2, p.r * 2.2, 1);
-    const streak = new THREE.Sprite(additive(glowTex([[0, 'rgba(240,246,255,1)'], [0.2, 'rgba(160,190,255,0.55)'], [1, 'rgba(0,0,0,0)']]), 1));
-    streak.scale.set(p.r * 16, p.r * 0.38, 1);
-    const streak2 = new THREE.Sprite(additive(glowTex([[0, 'rgba(150,180,255,0.5)'], [0.4, 'rgba(90,120,220,0.12)'], [1, 'rgba(0,0,0,0)']]), 0.9));
-    streak2.scale.set(p.r * 28, p.r * 1.3, 1);
-    const hazeT = canvasTex(256, (g, s2) => {
-      g.translate(s2 / 2, s2 / 2);
-      g.scale(1, 0.4);
-      const gr = g.createRadialGradient(0, 0, 0, 0, 0, s2 / 2);
-      gr.addColorStop(0, 'rgba(120,160,230,0.35)');
-      gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = gr;
-      g.beginPath();
-      g.arc(0, 0, s2 / 2, 0, Math.PI * 2);
-      g.fill();
-    });
-    const haze = new THREE.Sprite(additive(hazeT, 0.9));
-    haze.scale.set(p.r * 10, p.r * 10, 1);
-    group.add(haze, streak2, streak, core);
-    return wisps(group, 0x8ff0e0, 2, p.r * 3, p.r * 6, 14);
+    const k = (p.r * 9.5) / 715;
+    const curve = new THREE.CatmullRomCurve3(VOID_PATH.map(([x, y]) => new THREE.Vector3((x - 560) * k, 0, (y - 330) * k)), false, 'centripetal');
+    const N = 320, pts = curve.getSpacedPoints(N);
+    const curtain = (height, gain, wobble) => {
+      const pos = new Float32Array((N + 1) * 6), uv = new Float32Array((N + 1) * 4), idx = [];
+      pts.forEach((q, i) => {
+        const t = i / N;
+        const h = height * (0.55 + 0.45 * Math.sin(t * 9.0 + 1.3) * Math.sin(t * 3.1 + 0.4) + 0.25 * Math.sin(t * 23.0));
+        const sway = Math.sin(t * 14.0) * wobble;
+        pos.set([q.x, 0, q.z, q.x + sway, Math.max(h, height * 0.25), q.z - sway * 0.6], i * 6);
+        uv.set([t, 0, t, 1], i * 4);
+        if (i < N) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+      });
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+      g.setIndex(idx);
+      const m = new THREE.ShaderMaterial({ uniforms: { uTime: { value: 0 }, uGain: { value: gain } }, vertexShader: AURORA_VS, fragmentShader: AURORA_FS, side: THREE.DoubleSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+      timed.push(m.uniforms.uTime);
+      group.add(new THREE.Mesh(g, m));
+    };
+    curtain(p.r * 1.5, 1.1, p.r * 0.06);
+    curtain(p.r * 0.75, 0.7, -p.r * 0.1);
+    const D = 1400, dpos = new Float32Array(D * 3), dcol = new Float32Array(D * 3), dsize = new Float32Array(D), dph = new Float32Array(D);
+    for (let i = 0; i < D; i++) {
+      const q = curve.getPointAt(Math.random());
+      const spread = Math.pow(Math.random(), 2) * p.r * 0.35;
+      const a = Math.random() * Math.PI * 2;
+      dpos.set([q.x + Math.cos(a) * spread, Math.pow(Math.random(), 2.2) * p.r * 1.3, q.z + Math.sin(a) * spread], i * 3);
+      const b = 0.35 + Math.pow(Math.random(), 4) * 2.2;
+      dcol.set([b * 0.92, b * 0.95, b], i * 3);
+      dsize[i] = 1.2 + Math.random() * 2.4;
+      dph[i] = Math.random();
+    }
+    const dg = new THREE.BufferGeometry();
+    dg.setAttribute('position', new THREE.BufferAttribute(dpos, 3));
+    dg.setAttribute('aColor', new THREE.BufferAttribute(dcol, 3));
+    dg.setAttribute('aSize', new THREE.BufferAttribute(dsize, 1));
+    dg.setAttribute('aPhase', new THREE.BufferAttribute(dph, 1));
+    const dm = new THREE.ShaderMaterial({ uniforms: { uTime: { value: 0 }, uPx: { value: renderer.getPixelRatio() } }, vertexShader: STAR_VS, fragmentShader: STAR_FS, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+    timed.push(dm.uniforms.uTime);
+    group.add(new THREE.Points(dg, dm));
+    const glow = new THREE.Sprite(additive(glowTex([[0, 'rgba(230,236,255,0.5)'], [0.3, 'rgba(160,170,200,0.12)'], [1, 'rgba(0,0,0,0)']]), 0.8));
+    glow.scale.set(p.r * 4, p.r * 4, 1);
+    glow.position.copy(curve.getPointAt(0.3));
+    group.add(glow);
+    return null;
   }
 
   function makeZariman(group, p) {
@@ -611,6 +668,53 @@ function start() {
     group.add(frame);
   }
 
+  function fleshGeo() {
+    const g = new THREE.SphereGeometry(1, 128, 96);
+    const ps2 = g.attributes.position, vv = new THREE.Vector3();
+    for (let k = 0; k < ps2.count; k++) {
+      vv.fromBufferAttribute(ps2, k);
+      const d = 1 + 0.14 * Math.sin(vv.x * 3.2 + 1.0) * Math.cos(vv.y * 2.4) + 0.09 * Math.sin(vv.z * 5.1 + vv.x * 2.2) + 0.05 * Math.sin(vv.y * 9.0 + vv.z * 4.0) - 0.16 * Math.max(0, -vv.y - 0.35);
+      vv.multiplyScalar(d);
+      ps2.setXYZ(k, vv.x * 1.08, vv.y * 0.94, vv.z);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function makeTentacles(group, p) {
+    const mat = new THREE.ShaderMaterial({ uniforms: { uA: { value: new THREE.Color('#3a2412') }, uC: { value: new THREE.Color(3.2, 1.1, 0.25) }, uAtmo: { value: new THREE.Color('#000000') }, uAtmoStr: { value: 0 }, uTime: { value: 0 }, uBump: { value: 0 } }, vertexShader: PLANET_VS, fragmentShader: TENT_FS });
+    timed.push(mat.uniforms.uTime);
+    const rnd = (k) => { const x = Math.sin(k * 91.7 + 17.3) * 43758.5453; return x - Math.floor(x); };
+    const root = new THREE.Group();
+    for (let i = 0; i < 11; i++) {
+      const ang = -1.25 + (i / 10) * 2.3 + (rnd(i) - 0.5) * 0.25;
+      const start = new THREE.Vector3(0.6, Math.sin(ang) * 0.8, Math.cos(ang) * 0.4).normalize().multiplyScalar(p.r * 0.88);
+      const len = p.r * (1.6 + rnd(i + 10) * 1.4);
+      const pts = [start];
+      for (let k = 1; k <= 6; k++) {
+        const f = k / 6;
+        pts.push(new THREE.Vector3(start.x + len * f, start.y * (1 + f * 0.9) + Math.sin(f * 5.0 + i * 1.3) * p.r * 0.3 * f, start.z * (1 + f * 0.4) + Math.cos(f * 4.0 + i * 1.7) * p.r * 0.22 * f));
+      }
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const tubular = 64, radial = 7;
+      const geo = new THREE.TubeGeometry(curve, tubular, p.r * (0.024 + rnd(i + 20) * 0.02), radial, false);
+      const pos = geo.attributes.position, c = new THREE.Vector3(), v = new THREE.Vector3();
+      for (let s2 = 0; s2 <= tubular; s2++) {
+        const t = s2 / tubular;
+        curve.getPointAt(t, c);
+        const taper = Math.max(0.06, 1 - t * 0.94);
+        for (let r = 0; r <= radial; r++) {
+          const idx = s2 * (radial + 1) + r;
+          v.fromBufferAttribute(pos, idx).sub(c).multiplyScalar(taper).add(c);
+          pos.setXYZ(idx, v.x, v.y, v.z);
+        }
+      }
+      geo.computeVertexNormals();
+      root.add(new THREE.Mesh(geo, mat));
+    }
+    group.add(root);
+  }
+
   function lumpyGeo(seed) {
     const g = new THREE.SphereGeometry(1, 64, 48);
     const ps2 = g.attributes.position, vv = new THREE.Vector3();
@@ -645,7 +749,7 @@ function start() {
     tilt.rotation.z = p.tilt != null ? p.tilt : 0.18 + (i % 5) * 0.04;
     axis.add(tilt);
     group.add(axis);
-    const body = new THREE.Mesh(p.lumpy ? lumpyGeo(i) : sphereGeo, new THREE.ShaderMaterial({ uniforms, vertexShader: PLANET_VS, fragmentShader: frag }));
+    const body = new THREE.Mesh(p.tentacles ? fleshGeo() : p.lumpy ? lumpyGeo(i) : sphereGeo, new THREE.ShaderMaterial({ uniforms, vertexShader: PLANET_VS, fragmentShader: frag }));
     body.scale.setScalar(p.r);
     tilt.add(body);
     if (p.clouds) {
@@ -665,6 +769,7 @@ function start() {
       [1.45, 1.6].forEach((k) => { const r = new THREE.Mesh(new THREE.RingGeometry(p.r * k, p.r * (k + 0.025), 160), m); r.rotation.x = -Math.PI / 2; tilt.add(r); });
     }
     if (p.frame) makeFrame(group, p);
+    if (p.tentacles) makeTentacles(group, p);
     return { body, uniforms };
   }
 
@@ -1085,6 +1190,7 @@ function start() {
     sunGlow.material.rotation = t * 0.02;
     nebula.position.copy(camera.position);
     sunMat.uniforms.uTime.value = t;
+    timed.forEach((u) => { u.value = t; });
     starMat.uniforms.uTime.value = t;
     stars.position.copy(camera.position);
     finish.uniforms.uTime.value = t;
