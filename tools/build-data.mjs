@@ -13,9 +13,19 @@ const IMG_FILE = join(OUT_DIR, 'images.json');
 const CACHE_DIR =join(__dirname, '..', '.cache');
 const HTML_CACHE = join(CACHE_DIR, 'droptable.html');
 const ITEMS_CACHE = join(CACHE_DIR, 'items.json');
+const RU_ITEMS_CACHE = join(CACHE_DIR, 'items-ru.json');
+const MARKET_CACHE = join(CACHE_DIR, 'market.json');
+const RU_FILE = join(OUT_DIR, 'ru.json');
 
 const DROPTABLE_URL = 'https://www.warframe.com/droptables';
-const ITEMS_URL = 'https://api.warframestat.us/items/?language=en&only=name,isPrime,category,productCategory,imageName';
+const ITEMS_URL = 'https://api.warframestat.us/items/?language=en&only=uniqueName,name,isPrime,category,productCategory,imageName';
+const RU_ITEMS_URL = 'https://api.warframestat.us/items/?language=ru&only=uniqueName,name';
+const MARKET_URL = 'https://api.warframe.market/v2/items';
+const RELIC_TIER_RU = { Lith: 'Лит', Meso: 'Мезо', Neo: 'Нео', Axi: 'Акси', Requiem: 'Реквием' };
+const RELIC_STATE_RU = { Exceptional: 'Исключительная', Flawless: 'Безупречная', Radiant: 'Сияющая' };
+const BOOSTER_RU = { Affinity: 'Бустер опыта', 'Resource Drop Chance': 'Бустер шанса ресурсов', 'Mod Drop Chance': 'Бустер шанса модов', Credit: 'Бустер кредитов' };
+const EXTRA_RU = { Endo: 'Эндо', 'Credits Cache': 'Тайник кредитов', Ammo: 'Боеприпасы', Narin: 'Нарин', 'Encrypted Journal Fragment': 'Зашифрованный фрагмент дневника' };
+const FRAME_ALIAS = { 'Equinox Day': 'Equinox', 'Equinox Night': 'Equinox' };
 
 const STATES = ['Intact', 'Exceptional', 'Flawless', 'Radiant'];
 const CDN = 'https://cdn.warframestat.us/img/';
@@ -272,7 +282,9 @@ function parseNodes(html, resourceNames) {
     if (RELIC_NAME.test(n)) return { kind: 'relic' };
     if (/Credits Cache$|^Endo$/.test(n)) return { kind: 'currency' };
     const f = n.match(FRAME_COMP);
-    if (f && frameOwners.has(f[1])) return { kind: 'frame', owner: f[1] };
+    if (f && frameOwners.has(f[1])) return { kind: 'frame', owner: FRAME_ALIAS[f[1]] || f[1] };
+    const aspect = n.match(/^(Equinox) (Day|Night) Aspect Blueprint$/);
+    if (aspect) return { kind: 'frame', owner: aspect[1] };
     const bp = n.match(/^(.+) Blueprint$/);
     if (bp && frameOwners.has(bp[1])) return { kind: 'frame', owner: bp[1] };
     if (qtyNames.has(n) || resourceNames.has(n)) return { kind: 'resource' };
@@ -297,6 +309,79 @@ function parseNodes(html, resourceNames) {
   return { nodes: out, items };
 }
 
+function makeRuTranslator(dict, partWords) {
+  const memo = new Map();
+  const tr = (en) => {
+    if (memo.has(en)) return memo.get(en);
+    let out = dict.get(en) || null;
+    let m;
+    if (!out && (m = en.match(/^(Lith|Meso|Neo|Axi|Requiem) (\S+) Relic$/))) out = `Реликвия ${RELIC_TIER_RU[m[1]]} ${m[2]}`;
+    if (!out && (m = en.match(/^(.+ Relic) \((Exceptional|Flawless|Radiant)\)$/))) { const base = tr(m[1]); if (base) out = `${base} (${RELIC_STATE_RU[m[2]]})`; }
+    if (!out && (m = en.match(/^([\d,]+) Credits Cache$/))) out = `Тайник кредитов: ${m[1]}`;
+    if (!out && (m = en.match(/^([\d,]+) Credits$/))) out = `${m[1]} кредитов`;
+    if (!out && (m = en.match(/^([\d,]+) Höllars Cache$/))) out = `Тайник холларов: ${m[1]}`;
+    if (!out && (m = en.match(/^(\d+) Day (Affinity|Resource Drop Chance|Mod Drop Chance|Credit) Booster$/))) out = `${BOOSTER_RU[m[2]]} (${m[1]} дн.)`;
+    if (!out && (m = en.match(/^(.+) Blueprint$/))) { const base = tr(m[1]); if (base) out = base + ' (Чертеж)'; }
+    if (!out) {
+      const words = en.split(' ');
+      for (let k = Math.min(3, words.length - 1); k >= 1 && !out; k--) {
+        const part = partWords.get(words.slice(-k).join(' '));
+        if (!part) continue;
+        const owner = tr(words.slice(0, -k).join(' '));
+        if (owner) out = `${owner}: ${part}`;
+      }
+    }
+    if (!out && (m = en.match(/^(.+) (Day|Night)$/))) { const base = tr(m[1]); if (base) out = `${base} (${m[2] === 'Day' ? 'День' : 'Ночь'})`; }
+    if (!out && (m = en.match(/^(.+) Prime$/))) { const base = tr(m[1]); if (base) out = base + ' Прайм'; }
+    memo.set(en, out);
+    return out;
+  };
+  return tr;
+}
+
+async function loadRuDictionary(enItems) {
+  const dict = new Map();
+  const partWords = new Map([
+    ['Neuroptics', 'Нейрооптика'], ['Chassis', 'Каркас'], ['Systems', 'Системы'], ['Aspect', 'Аспект'],
+    ['Barrel', 'Ствол'], ['Receiver', 'Ресивер'], ['Stock', 'Приклад'], ['Blade', 'Лезвие'], ['Blades', 'Лезвия'], ['Handle', 'Рукоять'], ['Hilt', 'Рукоять'],
+    ['Grip', 'Рукоять'], ['String', 'Тетива'], ['Upper Limb', 'Верхнее плечо'], ['Lower Limb', 'Нижнее плечо'], ['Link', 'Связка'], ['Pouch', 'Подсумок'],
+    ['Stars', 'Звёзды'], ['Gauntlet', 'Перчатка'], ['Left Gauntlet', 'Левая перчатка'], ['Right Gauntlet', 'Правая перчатка'], ['Glove', 'Перчатка'],
+    ['Guard', 'Гарда'], ['Rivet', 'Заклёпка'], ['Fuselage', 'Фюзеляж'], ['Engines', 'Двигатели'], ['Avionics', 'Авионика'], ['Carapace', 'Панцирь'], ['Cerebrum', 'Мозг'],
+  ]);
+  for (const [en, ru] of Object.entries(EXTRA_RU)) dict.set(en, ru);
+  try {
+    const ru = await fetchWithRetry(RU_ITEMS_URL, { json: true, cacheFile: RU_ITEMS_CACHE });
+    const ruByUnique = new Map(ru.filter((i) => i.uniqueName && i.name).map((i) => [i.uniqueName, i.name]));
+    for (const i of enItems) {
+      const r = i.uniqueName && ruByUnique.get(i.uniqueName);
+      if (r && i.name && !dict.has(i.name) && /[А-Яа-яЁё]/.test(r)) dict.set(i.name, r);
+    }
+  } catch (e) {
+    console.log(`⚠ RU-названия warframestat недоступны (${e.message}).`);
+  }
+  try {
+    const market = await fetchWithRetry(MARKET_URL, { json: true, cacheFile: MARKET_CACHE });
+    const list = market.data || market;
+    const enByRu = new Map([...dict].map(([en, ru]) => [ru, en]));
+    for (const it of list) {
+      const en = it.i18n && it.i18n.en && it.i18n.en.name;
+      const ru = it.i18n && it.i18n.ru && it.i18n.ru.name;
+      if (!en || !ru || !/[А-Яа-яЁё]/.test(ru)) continue;
+      dict.set(en, ru);
+      const m = ru.replace(/ \(Чертеж\)$/, '').match(/^(.+): (.+)$/);
+      const ownerEn = m && enByRu.get(m[1]);
+      const enCore = en.replace(/ Blueprint$/, '');
+      if (ownerEn && enCore.startsWith(ownerEn + ' ')) {
+        const word = enCore.slice(ownerEn.length + 1);
+        if (!partWords.has(word)) partWords.set(word, m[2]);
+      }
+    }
+  } catch (e) {
+    console.log(`⚠ RU-названия warframe.market недоступны (${e.message}).`);
+  }
+  return makeRuTranslator(dict, partWords);
+}
+
 async function main() {
   console.log('Загружаю официальный droptable Digital Extremes...');
   const html = await fetchWithRetry(DROPTABLE_URL, { cacheFile: HTML_CACHE });
@@ -307,6 +392,8 @@ async function main() {
   const imageMap = new Map();
   const resourceNames = new Set();
   const savedImg = new Map();
+  const frameImg = new Map();
+  let enItems = [];
   try {
     const saved = JSON.parse(await readFile(IMG_FILE, 'utf8'));
     for (const [k, v] of Object.entries(saved)) savedImg.set(k, v);
@@ -318,8 +405,10 @@ async function main() {
   try {
     console.log('Загружаю категории из warframestat (обогащение)...');
     const items = await fetchWithRetry(ITEMS_URL, { json: true, cacheFile: ITEMS_CACHE });
+    enItems = items;
     for (const i of items) {
-      if (i.imageName) imageMap.set(i.name, i.imageName);
+      if (i.imageName && i.category === 'Warframes' && !frameImg.has(i.name)) frameImg.set(i.name, i.imageName);
+      if (i.imageName && !imageMap.has(i.name)) imageMap.set(i.name, i.imageName);
       if (i.category === 'Resources') resourceNames.add(i.name);
       const cat = categoryFromWarframestat(i);
       if (i.isPrime) catMap.set(i.name, cat);
@@ -412,8 +501,10 @@ async function main() {
   for (const list of Object.values(PLANET_RESOURCES)) for (const r of list) wanted.add(r);
   const images = {};
   for (const n of wanted) if (imgs[n]) images[n] = imgs[n];
+  for (const n of frameImg.keys()) if (wanted.has(n)) images['frame:' + n] = frameImg.get(n);
+  for (const [k, v] of savedImg) if (k.startsWith('frame:') && !images[k]) images[k] = v;
   for (const it of atlas.items) {
-    const im = images[it.name] || (it.owner && images[it.owner]);
+    const im = it.kind === 'frame' ? images['frame:' + it.owner] || images[it.owner] : images[it.name] || (it.owner && images[it.owner]);
     if (im) it.img = im;
   }
   const atlasOut = {
@@ -425,6 +516,20 @@ async function main() {
   };
   await writeFile(ATLAS_FILE, JSON.stringify(atlasOut));
   await writeFile(IMG_FILE, JSON.stringify(Object.fromEntries(Object.entries({ ...Object.fromEntries(savedImg), ...images }).sort()), null, 0) + '\n');
+  const tr = await loadRuDictionary(enItems);
+  let savedRu = {};
+  try { savedRu = JSON.parse(await readFile(RU_FILE, 'utf8')); } catch {  }
+  const ruNames = new Set(wanted);
+  for (const it of items) { ruNames.add(it.name); for (const p of it.parts) ruNames.add(p.name); }
+  for (const r of relics) for (const rw of r.rewards) ruNames.add(rw.item);
+  const ruOut = {};
+  const missing = [];
+  for (const n of [...ruNames].sort()) {
+    const r = tr(n) || savedRu[n];
+    if (r) ruOut[n] = r; else missing.push(n);
+  }
+  await writeFile(RU_FILE, JSON.stringify(ruOut, null, 0) + '\n');
+  console.log(`RU-названия: ${Object.keys(ruOut).length} | без перевода: ${missing.length}${missing.length ? ' (' + missing.slice(0, 25).join(', ') + ')' : ''}`);
   const kinds = {};
   for (const it of atlas.items) kinds[it.kind] = (kinds[it.kind] || 0) + 1;
   console.log(`Карта: ${ATLAS_FILE} (${(JSON.stringify(atlasOut).length / 1024).toFixed(1)} KB) | узлов: ${atlas.nodes.length} | предметы: ${JSON.stringify(kinds)}`);

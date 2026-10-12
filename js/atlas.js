@@ -18,7 +18,7 @@
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
       about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0). Item icons: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
       controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
-      click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
+      loot_frames: 'Warframes to build', loot_none: 'No warframe parts drop here.', loot_gear: 'Weapons & gear', click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
     },
     ru: {
@@ -37,13 +37,13 @@
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
       about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0). Иконки предметов: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
       controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
-      click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
+      loot_frames: 'Варфреймы для сборки', loot_none: 'Здесь не падают части варфреймов.', loot_gear: 'Оружие и снаряжение', click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
     },
   };
 
   const PLANET_RU = {
-    Mercury: 'Меркурий', Venus: 'Венера', Earth: 'Земля', Lua: 'Луна', Mars: 'Марс', Phobos: 'Фобос',
+    Mercury: 'Меркурий', Venus: 'Венера', Earth: 'Земля', Lua: 'Луа', Mars: 'Марс', Phobos: 'Фобос',
     Deimos: 'Деймос', Ceres: 'Церера', Jupiter: 'Юпитер', Europa: 'Европа', Saturn: 'Сатурн', Uranus: 'Уран',
     Neptune: 'Нептун', Pluto: 'Плутон', Sedna: 'Седна', Eris: 'Эрида', Void: 'Бездна', 'Kuva Fortress': 'Крепость Кувы',
     Zariman: 'Зариман', Duviri: 'Дувири', 'Höllvania': 'Хёлльвания', 'Veil Proxima': 'Проксима Завесы', Sanctuary: 'Святилище',
@@ -51,8 +51,8 @@
   const TYPE_RU = {
     Survival: 'Выживание', Defense: 'Оборона', 'Mobile Defense': 'Мобильная оборона', Interception: 'Перехват',
     Excavation: 'Раскопки', Exterminate: 'Зачистка', Capture: 'Захват', Rescue: 'Спасение', Spy: 'Шпионаж',
-    Sabotage: 'Диверсия', Assassination: 'Убийство', Disruption: 'Разрушение', Skirmish: 'Стычка', Caches: 'Тайники',
-    Bounty: 'Баунти', Defection: 'Дезертирство', Arena: 'Арена', 'Infested Salvage': 'Утилизация заражённых',
+    Sabotage: 'Диверсия', Assassination: 'Убийство', Disruption: 'Сбой', Skirmish: 'Стычка', Caches: 'Тайники',
+    Bounty: 'Баунти', Defection: 'Перебежчики', Arena: 'Арена', 'Infested Salvage': 'Утилизация заражённых',
     'Void Flood': 'Затопление Бездны', 'Void Cascade': 'Каскад Бездны', 'Void Armageddon': 'Армагеддон Бездны',
     Alchemy: 'Алхимия', Ascension: 'Вознесение', Recall: 'Отзыв', 'Sanctuary Onslaught': 'Натиск Святилища',
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
@@ -119,7 +119,7 @@
     window.Alpine.store('wf', {
       loaded: false, error: '', toast: '',
       lang: lsGet('wf_lang') === 'ru' ? 'ru' : 'en',
-      A: { items: [], nodes: [], planets: {}, cdn: '' }, P: { items: [], relics: [] },
+      A: { items: [], nodes: [], planets: {}, cdn: '' }, P: { items: [], relics: [] }, RU: {},
       generatedAt: null, loadedAt: 0,
       tab: 'prime', filter: '', open: {},
       sel: safe(() => JSON.parse(lsGet('wf_atlas_sel')) || {}, {}),
@@ -135,10 +135,10 @@
       async load(silent) {
         try {
           const get = (u) => fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(u + ' HTTP ' + r.status); return r.json(); });
-          const [A, P] = await Promise.all([get('data/atlas.json'), get('data/primes.json')]);
+          const [A, P, RU] = await Promise.all([get('data/atlas.json'), get('data/primes.json'), get('data/ru.json').catch(() => ({}))]);
           const changed = this.generatedAt && this.generatedAt !== A.generatedAt;
           A.nodes = prepNodes(A.nodes);
-          this.A = A; this.P = P; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
+          this.A = A; this.P = P; this.RU = RU; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
           this.nodeByKey = new Map(A.nodes.map((n) => [n.key, n]));
           this.hubMap = this.buildHubs(A.nodes);
           if (this.hub && !this.hubMap.has(this.hub)) this.hub = null;
@@ -161,6 +161,18 @@
       planetName(p) { return this.lang === 'ru' ? (PLANET_RU[p] || p) : p; },
       typeName(t) { return !t ? '' : this.lang === 'ru' ? (TYPE_RU[t] || t) : t; },
       toggleLang() { this.lang = this.lang === 'en' ? 'ru' : 'en'; lsSet('wf_lang', this.lang); this.emit(); },
+      tierName(t) { return this.lang === 'ru' ? ({ Lith: 'Лит', Meso: 'Мезо', Neo: 'Нео', Axi: 'Акси', Requiem: 'Реквием' }[t] || t) : t; },
+      nm(n) { return (this.lang === 'ru' && n && this.RU[n]) || n; },
+      matches(n, q) { return n.toLowerCase().includes(q) || (!!this.RU[n] && this.RU[n].toLowerCase().includes(q)); },
+      partShort(owner, p) {
+        if (this.lang !== 'ru' || !this.RU[p.name]) return p.short;
+        const o = this.RU[owner] || owner;
+        let rest = this.RU[p.name];
+        if (rest.startsWith(o)) rest = rest.slice(o.length);
+        rest = rest.replace(/^\((.+?)\):\s*/, '$1: ').replace(/^[:\s]+/, '').replace(/\s*\(Чертеж\)$/, '');
+        return rest || 'Чертеж';
+      },
+      noImg(ev) { ev.target.onerror = null; ev.target.src = 'media/lotus.png'; ev.target.classList.add('no-img'); },
       toggleMode() { this.mode = this.mode === 'late' ? 'base' : 'late'; lsSet('wf_mode', this.mode); this.emit(); },
       emit() { window.dispatchEvent(new CustomEvent('atlas:update')); },
 
@@ -214,7 +226,7 @@
         const hit = this.hubHit(h);
         let s = `<div class="tip-h">${esc(this.hubName(h))}<span>${esc(this.hubSub(h))}</span></div>`;
         if (hit.plan) s += `<div class="tip-hit">● ${esc(this.t('your'))}: ${this.fmt(hit.plan)}</div>`;
-        if (hit.find) s += `<div class="tip-find">● ${esc(this.focus)}: ${this.fmt(hit.find)}</div>`;
+        if (hit.find) s += `<div class="tip-find">● ${esc(this.nm(this.focus))}: ${this.fmt(hit.find)}</div>`;
         for (const n of h.nodes.slice(0, 14)) {
           const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key);
           s += `<div class="tip-row${ph || fh ? ' want' : ''}"><i style="background:${ph ? '#e3b45e' : fh ? '#7fd0e6' : '#5d6f7b'}"></i><b>${n.lvl ? esc(n.lvl) + ' · ' : ''}${esc(n.short)}</b><em>${ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''}</em></div>`;
@@ -242,7 +254,7 @@
         const list = this.tab === 'prime'
           ? this.P.items.map((i) => ({ name: i.name, img: i.image, parts: i.parts.map((p) => ({ name: p.name, short: p.short })), pre: 'p:' }))
           : this.frames.map((f) => ({ ...f, pre: 'a:' }));
-        return q ? list.filter((i) => i.name.toLowerCase().includes(q) || i.parts.some((p) => p.name.toLowerCase().includes(q))) : list;
+        return q ? list.filter((i) => this.matches(i.name, q) || i.parts.some((p) => this.matches(p.name, q))) : list;
       },
       isSel(pre, name) { return !!this.sel[pre + name]; },
       toggle(pre, name) {
@@ -313,8 +325,9 @@
       results() {
         const q = this.q.trim().toLowerCase();
         if (q.length < 2) return [];
-        const res = this.searchIndex().filter((e) => e.name.toLowerCase().includes(q));
-        res.sort((a, b) => (a.name.toLowerCase().startsWith(q) ? 0 : 1) - (b.name.toLowerCase().startsWith(q) ? 0 : 1)
+        const res = this.searchIndex().filter((e) => this.matches(e.name, q));
+        const starts = (e) => (e.name.toLowerCase().startsWith(q) || this.nm(e.name).toLowerCase().startsWith(q) ? 0 : 1);
+        res.sort((a, b) => starts(a) - starts(b)
           || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.name.localeCompare(b.name));
         return res.slice(0, 40);
       },
@@ -372,6 +385,49 @@
         const score = (n) => (this.planHits.get(n.key) ? 2 : 0) + (this.findHits.get(n.key) ? 1 : 0);
         return nodes.sort((a, b) => score(b) - score(a) || (a.t || '').localeCompare(b.t || '') || a.n.localeCompare(b.n));
       },
+      planetLoot(p) {
+        const frames = new Map(); const gear = new Map(); const relics = new Map();
+        const keep = (map, key, extra, part, n, rot, ch) => {
+          const g = map.get(key) || { name: key, parts: new Map(), ...extra };
+          const prev = g.parts.get(part.name);
+          if (!prev || ch > prev.ch) g.parts.set(part.name, { it: part, node: n, rot, ch });
+          map.set(key, g);
+        };
+        for (const n of this.A.nodes) {
+          if (n.p !== p) continue;
+          for (const [rot, drops] of Object.entries(n.r)) for (const [i, ch] of drops) {
+            const it = this.A.items[i];
+            if (it.kind === 'frame') keep(frames, it.owner, { img: it.img }, it, n, rot, ch);
+            else if (it.kind === 'gear' && it.owner) keep(gear, it.owner, { img: it.img }, it, n, rot, ch);
+            else if (it.kind === 'relic') keep(relics, it.name.split(' ')[0], {}, it, n, rot, ch);
+          }
+        }
+        const order = ['Blueprint', 'Neuroptics', 'Chassis', 'Systems'];
+        const rank = (g, x) => { const s = x.it.name.slice(g.name.length).trim(); const k = order.findIndex((w) => s.startsWith(w) || s.endsWith(w + ' Blueprint')); return k < 0 ? 9 : k; };
+        const fin = (map) => [...map.values()].map((g) => {
+          const parts = [...g.parts.values()].sort((a, b) => rank(g, a) - rank(g, b) || a.it.name.localeCompare(b.it.name));
+          const fr = this.frames && this.frames.find((f) => f.name === g.name);
+          return { ...g, parts, total: fr ? fr.parts.length : parts.length, set: fr || null };
+        }).sort((a, b) => (b.parts.length >= b.total) - (a.parts.length >= a.total) || a.name.localeCompare(b.name));
+        const tiers = ['Lith', 'Meso', 'Neo', 'Axi', 'Requiem'];
+        return {
+          frames: fin(frames),
+          gear: fin(gear),
+          relics: [...relics.values()].sort((a, b) => tiers.indexOf(a.name) - tiers.indexOf(b.name)).map((g) => ({ tier: g.name, list: [...g.parts.values()].sort((a, b) => a.it.name.localeCompare(b.it.name)) })),
+        };
+      },
+      loot: null, lootFor: null, lootOpen: {},
+      viewLoot() {
+        if (!this.view) return null;
+        if (this.lootFor !== this.view + this.generatedAt) { this.loot = this.planetLoot(this.view); this.lootFor = this.view + this.generatedAt; }
+        return this.loot;
+      },
+      partLabel(owner, x) { return this.partShort(owner, { name: x.it.name, short: x.it.name.slice(owner.length).trim().replace(/ Blueprint$/, '') || 'Blueprint' }); },
+      planFrame(g) {
+        if (!g.set) return;
+        this.toggleSet({ ...g.set, pre: 'a:' });
+        this.tab = 'frames';
+      },
       planetInfo(p) {
         const nodes = this.A.nodes.filter((n) => n.p === p);
         const frames = new Set(); const tiers = {};
@@ -413,13 +469,13 @@
         const plan = this.planPlanets[p]; const find = this.findHits.size ? [...this.findHits.values()].filter((h) => h.node.p === p) : [];
         let h = `<div class="tip-h">${esc(this.planetName(p))}<span>${info.nodes} ${esc(this.t('nodes'))}</span></div>`;
         if (plan) h += `<div class="tip-hit">● ${esc(this.t('your'))}: ${plan.count} · ${this.fmt(plan.best)}</div>`;
-        if (find.length || this.findPlanets[p]) h += `<div class="tip-find">● ${esc(this.focus)}${find.length ? ': ' + find.length + ' · ' + this.fmt(Math.max(...find.map((f) => f.eff))) : ''}</div>`;
+        if (find.length || this.findPlanets[p]) h += `<div class="tip-find">● ${esc(this.nm(this.focus))}${find.length ? ': ' + find.length + ' · ' + this.fmt(Math.max(...find.map((f) => f.eff))) : ''}</div>`;
         if (info.res.length) {
           h += `<div class="tip-s">${esc(this.t('resources'))}</div><div class="tip-res">`;
-          for (const [r, img] of info.res) h += `<span>${img ? `<img src="${this.img(img)}" alt="" onerror="this.remove()">` : ''}${esc(r)}</span>`;
+          for (const [r, img] of info.res) h += `<span>${img ? `<img src="${this.img(img)}" alt="" onerror="this.remove()">` : ''}${esc(this.nm(r))}</span>`;
           h += '</div>';
         }
-        if (info.frames.length) h += `<div class="tip-s">${esc(this.t('bosses'))}</div><div class="tip-t">${info.frames.map(esc).join(', ')}</div>`;
+        if (info.frames.length) h += `<div class="tip-s">${esc(this.t('bosses'))}</div><div class="tip-t">${info.frames.map((f) => esc(this.nm(f))).join(', ')}</div>`;
         if (info.tiers.length) h += `<div class="tip-s">${esc(this.t('relics'))}</div><div class="tip-t">${info.tiers.join(' · ')}</div>`;
         h += `<div class="tip-foot">${esc(this.t('click_hint'))}</div>`;
         return h;
@@ -430,7 +486,7 @@
           if (g.rot) h += `<div class="tip-s">${esc(this.rotName(g.rot))}</div>`;
           for (const r of g.rows) {
             const want = this.isWanted(nd, r.it);
-            h += `<div class="tip-row${want ? ' want' : ''}"><i style="background:${this.kindColor(r.it.kind)}"></i><b>${r.qty ? esc(r.qty) + ' ' : ''}${esc(r.it.name)}</b><em>${this.fmt(r.ch)}</em></div>`;
+            h += `<div class="tip-row${want ? ' want' : ''}"><i style="background:${this.kindColor(r.it.kind)}"></i><b>${r.qty ? esc(r.qty) + ' ' : ''}${esc(this.nm(r.it.name))}</b><em>${this.fmt(r.ch)}</em></div>`;
           }
           if (g.hidden) h += `<div class="tip-more">+${g.hidden} ${esc(this.t('more'))}</div>`;
         }
