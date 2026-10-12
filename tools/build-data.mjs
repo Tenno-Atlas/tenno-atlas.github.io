@@ -342,7 +342,7 @@ function makeRuTranslator(dict, partWords) {
 async function loadRuDictionary(enItems) {
   const dict = new Map();
   const partWords = new Map([
-    ['Neuroptics', 'Нейрооптика'], ['Chassis', 'Каркас'], ['Systems', 'Системы'], ['Aspect', 'Аспект'],
+    ['Neuroptics', 'Нейрооптика'], ['Chassis', 'Каркас'], ['Systems', 'Система'], ['Aspect', 'Аспект'],
     ['Barrel', 'Ствол'], ['Receiver', 'Ресивер'], ['Stock', 'Приклад'], ['Blade', 'Лезвие'], ['Blades', 'Лезвия'], ['Handle', 'Рукоять'], ['Hilt', 'Рукоять'],
     ['Grip', 'Рукоять'], ['String', 'Тетива'], ['Upper Limb', 'Верхнее плечо'], ['Lower Limb', 'Нижнее плечо'], ['Link', 'Связка'], ['Pouch', 'Подсумок'],
     ['Stars', 'Звёзды'], ['Gauntlet', 'Перчатка'], ['Left Gauntlet', 'Левая перчатка'], ['Right Gauntlet', 'Правая перчатка'], ['Glove', 'Перчатка'],
@@ -526,7 +526,7 @@ async function main() {
   const missing = [];
   for (const n of [...ruNames].sort()) {
     const r = tr(n) || savedRu[n];
-    if (r) ruOut[n] = r; else missing.push(n);
+    if (r) ruOut[n] = r.replace(/: Системы( \(Чертеж\))?$/, ': Система$1'); else missing.push(n);
   }
   await writeFile(RU_FILE, JSON.stringify(ruOut, null, 0) + '\n');
   console.log(`RU-названия: ${Object.keys(ruOut).length} | без перевода: ${missing.length}${missing.length ? ' (' + missing.slice(0, 25).join(', ') + ')' : ''}`);

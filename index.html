@@ -49,6 +49,30 @@
     <div class="no-webgl-msg">WebGL is not available in this browser.</div>
   </div>
 
+  <button type="button" class="duviri-card" x-show="$store.wf.loaded && !$store.wf.view" x-cloak
+    :class="{ plan: !!$store.wf.planetHit('Duviri').plan, find: $store.wf.planetHit('Duviri').find, dim: $store.wf.anyHi() && !$store.wf.planetHit('Duviri').plan && !$store.wf.planetHit('Duviri').find }"
+    @click="$store.wf.openPlanet('Duviri')" @mouseenter="$store.wf.showTip($event, $store.wf.planetTip('Duviri'))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()">
+    <img src="media/duviri.jpg" alt="" />
+    <span class="dc-shade"></span>
+    <span class="dc-name" x-text="$store.wf.planetName('Duviri')"></span>
+    <span class="dc-sub" x-text="$store.wf.nodesOf('Duviri').length + ' ' + $store.wf.t('nodes')"></span>
+    <span class="dc-badge" x-show="$store.wf.planetHit('Duviri').plan" x-text="($store.wf.planetHit('Duviri').plan || {}).count"></span>
+  </button>
+
+  <template x-if="$store.wf.loaded && $store.wf.view === 'Duviri'">
+    <section class="duviri-view">
+      <div class="dv-art"><img src="media/duviri.jpg" alt="" /><span x-text="$store.wf.t('duviri_tag')"></span></div>
+      <div class="dv-nodes">
+        <template x-for="n in $store.wf.nodesOf('Duviri')" :key="n.key">
+          <button type="button" class="dv-node" :class="{ plan: $store.wf.planHits.has(n.key), find: !$store.wf.planHits.has(n.key) && $store.wf.findHits.has(n.key), pinned: $store.wf.pinned === n.key }"
+            @click="$store.wf.pin(n.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(n))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()">
+            <i></i><span class="dv-n" x-text="n.n"></span><span class="dv-t" x-text="$store.wf.nodeSub(n)"></span>
+          </button>
+        </template>
+      </div>
+    </section>
+  </template>
+
   <header class="hud-top">
     <button @click="$store.wf.view ? $store.wf.closePlanet() : window.dispatchEvent(new CustomEvent('atlas:home'))" class="brand" aria-label="Tenno Atlas">
       <img src="media/lotus.png" alt="" class="brand-logo" />

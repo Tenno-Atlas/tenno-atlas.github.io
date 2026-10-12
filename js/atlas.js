@@ -12,11 +12,11 @@
       search: 'Drop search', search_ph: 'Resource, part, relic, mod…', search_hint: 'Try: Argon Crystal, Rhino, Neo C8, Orokin Cell',
       drops_at: 'Where it drops', planet_res: 'Planet resource', from_enemies: 'drops from enemies & containers on the planet',
       add_plan: 'Add to planner', in_plan: 'In planner',
-      back: 'Star chart', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
+      back: 'Star chart', duviri_tag: 'Another reality · The Duviri Paradox', nodes: 'nodes', resources: 'Resources', bosses: 'Warframe parts', relics: 'Relics',
       rot: 'Rot.', node_details: 'Node', close: 'Close', click_hint: 'Click a planet to fly to it',
       your: 'Your drops', more: 'more', data_sync: 'Data',
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
-      about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0). Item icons: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
+      about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0); Earth maps: NASA Blue Marble via three.js examples. Item icons and Duviri art: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
       controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
       loot_frames: 'Warframes to build', loot_none: 'No warframe parts drop here.', loot_gear: 'Weapons & gear', click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
@@ -31,11 +31,11 @@
       search: 'Поиск дропа', search_ph: 'Ресурс, деталь, реликвия, мод…', search_hint: 'Например: Argon Crystal, Rhino, Neo C8, Orokin Cell',
       drops_at: 'Где падает', planet_res: 'Ресурс планеты', from_enemies: 'падает с врагов и ящиков на планете',
       add_plan: 'В планировщик', in_plan: 'В планировщике',
-      back: 'Звёздная карта', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
+      back: 'Звёздная карта', duviri_tag: 'Иная реальность · Парадокс Дувири', nodes: 'узлов', resources: 'Ресурсы', bosses: 'Части варфреймов', relics: 'Реликвии',
       rot: 'Рот.', node_details: 'Узел', close: 'Закрыть', click_hint: 'Нажми на планету, чтобы подлететь',
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные',
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
-      about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0). Иконки предметов: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
+      about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0); карты Земли: NASA Blue Marble (примеры three.js). Иконки предметов и арт Дувири: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
       controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
       loot_frames: 'Варфреймы для сборки', loot_none: 'Здесь не падают части варфреймов.', loot_gear: 'Оружие и снаряжение', click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
@@ -494,6 +494,10 @@
       },
 
       pinnedNode() { return this.pinned ? this.nodeByKey.get(this.pinned) : null; },
+      planetHit(p) { return { plan: this.planPlanets[p] || null, find: !!this.findPlanets[p] || [...this.findHits.values()].some((h) => h.node.p === p) }; },
+      anyHi() { return !!(this.planHits.size || this.findHits.size || Object.keys(this.findPlanets).length); },
+      nodesOf(p) { const key = (n) => (/^Endless/.test(n.n) ? '1' : '0') + n.n.replace('Repeated Rewards', 'Tier 99'); return this.A.nodes.filter((n) => n.p === p).sort((a, b) => key(a).localeCompare(key(b), 'en', { numeric: true })); },
+      nodeSub(n) { const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key); return [this.typeName(n.t), ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''].filter(Boolean).join(' · '); },
     });
 
     const s = window.Alpine.store('wf');
