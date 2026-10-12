@@ -477,59 +477,101 @@ function start() {
     return { body: ship, spin: wisps(group, 0x7ff5e0, 2, p.r * 2, p.r * 5, 10) };
   }
 
-  function makeFortress(group, p) {
-    const geo = new THREE.IcosahedronGeometry(1, 5);
-    const ps2 = geo.attributes.position, vv = new THREE.Vector3();
+  function rockGeo(seed, detail = 3) {
+    const g = new THREE.IcosahedronGeometry(1, detail);
+    const ps2 = g.attributes.position, vv = new THREE.Vector3();
     for (let k = 0; k < ps2.count; k++) {
       vv.fromBufferAttribute(ps2, k);
-      const d = 1 + 0.11 * Math.sin(vv.x * 3.1 + 1.0) * Math.cos(vv.y * 2.7) + 0.07 * Math.sin(vv.z * 5.3 + vv.x * 2.0) + 0.035 * Math.sin(vv.x * 11.0) * Math.sin(vv.z * 9.0) + 0.02 * Math.sin(vv.y * 17.0 + vv.z * 13.0);
-      vv.multiplyScalar(d * p.r);
-      ps2.setXYZ(k, vv.x * 1.05, vv.y * 0.7, vv.z * 1.15);
+      const d = 1 + 0.22 * Math.sin(vv.x * 3.3 + seed) * Math.cos(vv.y * 2.9 + seed * 0.7) + 0.12 * Math.sin(vv.z * 6.1 + seed * 1.3);
+      vv.multiplyScalar(d);
+      ps2.setXYZ(k, vv.x * 1.15, vv.y * 0.85, vv.z);
     }
-    geo.computeVertexNormals();
-    const rockMap = tex('moon');
-    const rock = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x7a625a, emissive: 0x1c0604, roughness: 0.95, metalness: 0.05, map: rockMap, bumpMap: rockMap, bumpScale: 3 }));
-    group.add(rock);
-    const metal = new THREE.MeshStandardMaterial({ color: 0x41454d, emissive: 0x08090b, roughness: 0.32, metalness: 0.9 });
-    const trim = new THREE.MeshStandardMaterial({ color: 0x4e443d, roughness: 0.6, metalness: 0.6 });
-    const glow = new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 0.55, 0.3) });
-    const up = new THREE.Vector3(0, 1, 0);
-    const surf = (dir) => { const r = new THREE.Raycaster(dir.clone().multiplyScalar(p.r * 3), dir.clone().negate()); const h = r.intersectObject(rock)[0]; return h ? h.point : dir.clone().multiplyScalar(p.r * 0.7); };
-    for (let i = 0; i < 34; i++) {
-      const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.8 + 0.25, Math.random() - 0.5).normalize();
-      const base = surf(dir);
-      const tower = i % 3 === 0;
-      if (tower) {
-        const h = p.r * (0.3 + Math.random() * 0.38), w = p.r * (0.045 + Math.random() * 0.03);
-        const spire = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.15, w, h, 8, 1), metal);
-        spire.quaternion.setFromUnitVectors(up, dir);
-        spire.position.copy(base).addScaledVector(dir, h * 0.5 - p.r * 0.03);
-        rock.add(spire);
-        const collar = new THREE.Mesh(new THREE.CylinderGeometry(w * 1.5, w * 1.8, h * 0.12, 8), trim);
-        collar.quaternion.copy(spire.quaternion);
-        collar.position.copy(base).addScaledVector(dir, h * 0.06);
-        rock.add(collar);
-        const tip = new THREE.Mesh(new THREE.SphereGeometry(w * 0.35, 8, 6), glow);
-        tip.position.copy(base).addScaledVector(dir, h - p.r * 0.03);
-        rock.add(tip);
-      } else {
-        const w = p.r * (0.08 + Math.random() * 0.12), h = p.r * (0.06 + Math.random() * 0.12);
-        const hall = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * (0.5 + Math.random() * 0.8)), Math.random() < 0.3 ? trim : metal);
-        hall.quaternion.setFromUnitVectors(up, dir);
-        hall.rotateY(Math.random() * Math.PI);
-        hall.position.copy(base).addScaledVector(dir, h * 0.35);
-        rock.add(hall);
-        if (Math.random() < 0.3) {
-          const strip = new THREE.Mesh(new THREE.BoxGeometry(w * 1.02, h * 0.08, w * 0.08), glow);
-          strip.position.set(0, h * 0.2, w * 0.3);
-          hall.add(strip);
-        }
-      }
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function makeFortress(group, p) {
+    const fort = new THREE.Group();
+    const hull = new THREE.MeshStandardMaterial({ color: 0x6a5f72, emissive: 0x1c141e, roughness: 0.38, metalness: 0.75 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x3a3440, roughness: 0.55, metalness: 0.7 });
+    const stone = new THREE.MeshStandardMaterial({ color: 0x5c5560, roughness: 0.9, metalness: 0.05, map: tex('moon'), bumpMap: tex('moon'), bumpScale: 2 });
+    const red = new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 0.3, 0.15) });
+    const profile = [[0.0, -1.75], [0.05, -1.6], [0.12, -1.25], [0.2, -0.8], [0.28, -0.3], [0.34, 0.15], [0.36, 0.5], [0.3, 0.78], [0.2, 0.95], [0.0, 1.0]].map(([x, y]) => new THREE.Vector2(x, y));
+    const spine = new THREE.Mesh(new THREE.LatheGeometry(profile, 28), hull);
+    spine.scale.set(1, 1, 0.62);
+    fort.add(spine);
+    [-1, 1].forEach((side) => {
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.9, 0.22), dark);
+      fin.position.set(side * 0.27, -0.35, 0);
+      fin.rotation.z = side * 0.09;
+      fort.add(fin);
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.2, 0.5), hull);
+      rib.position.set(side * 0.12, -0.2, 0.12);
+      rib.rotation.z = -side * 0.05;
+      fort.add(rib);
+    });
+    const capShape = new THREE.Shape();
+    capShape.moveTo(-0.95, 0.0);
+    capShape.bezierCurveTo(-0.6, 0.32, 0.2, 0.42, 1.05, 0.2);
+    capShape.lineTo(0.92, 0.06);
+    capShape.bezierCurveTo(0.4, 0.02, -0.2, -0.22, -0.95, 0.0);
+    const cap = new THREE.Mesh(new THREE.ExtrudeGeometry(capShape, { depth: 0.38, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.04, bevelSegments: 3, curveSegments: 24 }), hull);
+    cap.position.set(-0.02, 0.88, -0.19);
+    cap.rotation.z = 0.06;
+    fort.add(cap);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.26, 0.28, 10), dark);
+    crown.position.set(-0.05, 0.82, 0);
+    fort.add(crown);
+    const rnd = (k) => { const x = Math.sin(k * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    for (let i = 0; i < 18; i++) {
+      const y = -1.3 + rnd(i) * 2.0;
+      const a = rnd(i + 40) * Math.PI * 2;
+      const d = 0.32 + rnd(i + 80) * 0.22;
+      const sc = 0.07 + rnd(i + 120) * 0.13;
+      const r = new THREE.Mesh(rockGeo(i), stone);
+      r.scale.setScalar(sc);
+      r.position.set(Math.cos(a) * d, y, Math.sin(a) * d * 0.7);
+      r.rotation.set(rnd(i + 3) * 3, rnd(i + 5) * 3, rnd(i + 7) * 3);
+      fort.add(r);
     }
-    const red = new THREE.Sprite(additive(glowTex([[0, 'rgba(255,90,60,0.45)'], [0.4, 'rgba(200,30,30,0.1)'], [1, 'rgba(0,0,0,0)']])));
-    red.scale.set(p.r * 4.5, p.r * 4.5, 1);
-    group.add(red);
-    return rock;
+    const tethered = [[-1.15, 0.55, 0.1, 0.3], [1.2, 0.35, -0.1, 0.26], [0.95, -0.55, 0.2, 0.18], [-0.85, -0.85, -0.15, 0.16], [0.55, 1.25, 0.05, 0.08]];
+    tethered.forEach(([x, y, z, sc], i) => {
+      const r = new THREE.Mesh(rockGeo(i + 50), stone);
+      r.scale.setScalar(sc);
+      r.position.set(x, y, z);
+      fort.add(r);
+      if (sc < 0.12) return;
+      const from = new THREE.Vector3(Math.sign(x) * 0.25, y - 0.1, 0);
+      const to = new THREE.Vector3(x - Math.sign(x) * sc * 0.8, y, z);
+      const mid = from.clone().lerp(to, 0.5).add(new THREE.Vector3(0, -0.3, 0.05));
+      fort.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([from, mid, to]), 24, 0.028, 6, false), dark));
+    });
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const pts = [new THREE.Vector3(0, -1.55, 0)];
+      for (let k = 1; k <= 4; k++) pts.push(new THREE.Vector3(Math.cos(a) * 0.05 * k + Math.sin(k + i) * 0.04, -1.55 - k * 0.12, Math.sin(a) * 0.05 * k));
+      fort.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.012, 5, false), dark));
+    }
+    for (let i = 0; i < 14; i++) {
+      const y = -1.1 + rnd(i + 200) * 1.9;
+      const a = (rnd(i + 230) - 0.5) * 2.2 + (i % 2 ? Math.PI : 0);
+      const rr = 0.3 * Math.min(1, (y + 1.75) / 1.6) + 0.02;
+      const light = new THREE.Mesh(new THREE.SphereGeometry(0.018 + rnd(i + 260) * 0.02, 8, 6), red);
+      light.position.set(Math.sin(a) * rr, y, Math.cos(a) * rr * 0.62);
+      fort.add(light);
+    }
+    for (let i = 0; i < 3; i++) {
+      const slit = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.012, 0.01), red);
+      slit.position.set(0, 0.35 - i * 0.18, 0.225);
+      fort.add(slit);
+    }
+    fort.scale.setScalar(p.r * 0.62);
+    fort.rotation.set(-0.72, 0, 0.08);
+    group.add(fort);
+    const glow = new THREE.Sprite(additive(glowTex([[0, 'rgba(255,70,50,0.35)'], [0.4, 'rgba(190,25,25,0.08)'], [1, 'rgba(0,0,0,0)']])));
+    glow.scale.set(p.r * 3.5, p.r * 4.5, 1);
+    group.add(glow);
+    return fort;
   }
 
   function makeNebula(group, p) {

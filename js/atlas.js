@@ -17,7 +17,7 @@
       your: 'Your drops', more: 'more', data_sync: 'Data',
       updated: 'Data refreshed', mode_base: 'Early game', mode_late: 'Late game', mode_hint: 'Late game shows the Zariman and derelict ships (spoilers)',
       about: 'About', about_text: 'Fan-made Warframe farm map. Not affiliated with Digital Extremes. Drop data: official DE drop tables, updated daily.', credits: 'Planet textures: Solar System Scope (CC BY 4.0); Earth maps: NASA Blue Marble via three.js examples. Item icons and Duviri art: warframestat.us. Warframe and the Lotus logo © Digital Extremes Ltd.', origin: 'Origin System', planner_short: 'Planner', search_short: 'Search',
-      controls: 'Drag — move · Wheel — zoom · Right drag — rotate',
+     
       loot_frames: 'Warframes to build', loot_none: 'No warframe parts drop here.', loot_gear: 'Weapons & gear', click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
     },
@@ -36,7 +36,7 @@
       your: 'Твой дроп', more: 'ещё', data_sync: 'Данные',
       updated: 'Данные обновлены', mode_base: 'Начало игры', mode_late: 'Поздняя игра', mode_hint: 'Поздняя игра показывает Зариман и обломки кораблей (спойлеры)',
       about: 'О сайте', about_text: 'Фанатская карта фарма Warframe. Не связана с Digital Extremes. Данные дропа: официальные таблицы DE, обновляются ежедневно.', credits: 'Текстуры планет: Solar System Scope (CC BY 4.0); карты Земли: NASA Blue Marble (примеры three.js). Иконки предметов и арт Дувири: warframestat.us. Warframe и логотип Лотоса © Digital Extremes Ltd.', origin: 'Система Origin', planner_short: 'Планер', search_short: 'Поиск',
-      controls: 'Тянуть — двигать · Колесо — зум · Правая кнопка — вращать',
+     
       loot_frames: 'Варфреймы для сборки', loot_none: 'Здесь не падают части варфреймов.', loot_gear: 'Оружие и снаряжение', click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
     },

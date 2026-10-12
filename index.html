@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://cdn.warframestat.us" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Saira+Semi+Condensed:wght@400;500;600;700&family=Saira:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
@@ -27,8 +27,8 @@
             gold: '#e3b45e', cyan: '#7fd0e6', danger: '#e8455c',
           },
           fontFamily: {
-            sans: ['Roboto', 'system-ui', 'sans-serif'],
-            cond: ['"Roboto Condensed"', 'Roboto', 'sans-serif'],
+            sans: ['Saira', 'system-ui', 'sans-serif'],
+            cond: ['"Saira Semi Condensed"', 'Saira', 'sans-serif'],
           },
         },
       },
@@ -95,15 +95,14 @@
     </div>
 
     <div class="flex items-center gap-2 ml-auto">
-      <span class="controls-hint hud-meta" x-text="$store.wf.t('controls')"></span>
       <span class="hidden md:inline hud-meta" x-show="$store.wf.loaded" x-text="$store.wf.t('data_sync') + ' ' + $store.wf.dateStr()"></span>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('left')" :class="$store.wf.panel==='left' && 'on'" x-text="$store.wf.t('planner_short')"></button>
       <button class="wf-btn lg:hidden" @click="$store.wf.togglePanel('right')" :class="$store.wf.panel==='right' && 'on'" x-text="$store.wf.t('search_short')"></button>
       <button class="wf-btn hidden md:inline-block" @click="$store.wf.toggleMode()" :class="$store.wf.mode==='late' && 'on'" :title="$store.wf.t('mode_hint')" x-text="$store.wf.mode==='late' ? $store.wf.t('mode_late') : $store.wf.t('mode_base')"></button>
-      <button data-lang-toggle @click="$store.wf.toggleLang()" class="wf-btn" aria-label="Language">
-        <span :class="$store.wf.lang==='en' ? 'text-gold' : 'text-dim'">EN</span><span class="text-line mx-1">/</span><span :class="$store.wf.lang==='ru' ? 'text-gold' : 'text-dim'">RU</span>
+      <button data-lang-toggle @click="$store.wf.toggleLang()" class="lang-toggle" aria-label="Language">
+        <span :class="$store.wf.lang==='en' && 'on'">EN</span><span :class="$store.wf.lang==='ru' && 'on'">RU</span>
       </button>
-      <button class="wf-btn w-[34px] px-0" @click="$store.wf.aboutOpen = !$store.wf.aboutOpen" :class="$store.wf.aboutOpen && 'on'" :aria-label="$store.wf.t('about')">i</button>
+      <button class="wf-btn icon-btn" @click="$store.wf.aboutOpen = !$store.wf.aboutOpen" :class="$store.wf.aboutOpen && 'on'" :aria-label="$store.wf.t('about')"><svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor"/><path d="M8 7v4.5M8 4.6v.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg></button>
     </div>
   </header>
 
@@ -129,7 +128,7 @@
           <span :class="$store.wf.focus === r[0] && 'hit'"><img x-show="r[1]" :src="$store.wf.img(r[1])" alt="" /><span x-text="$store.wf.nm(r[0])"></span></span>
         </template>
       </div>
-      <button class="wf-btn mt-2" @click="$store.wf.closePlanet()" x-text="'‹ ' + $store.wf.t('back')"></button>
+      <button class="back-link" @click="$store.wf.closePlanet()"><i></i><span x-text="$store.wf.t('back')"></span></button>
     </div>
   </template>
 
@@ -150,17 +149,18 @@
 
     <div class="wf-scroll flex-1">
       <template x-for="item in $store.wf.plannerList()" :key="item.pre + item.name">
-        <div class="wf-item" :class="$store.wf.someSel(item) && 'sel'">
-          <div class="flex items-center gap-2 px-3 py-1.5">
-            <button @click="$store.wf.open[item.name] = !$store.wf.open[item.name]" class="flex items-center gap-2 flex-1 min-w-0 text-left">
-              <img :src="item.img ? $store.wf.img(item.img) : 'media/lotus.png'" alt="" loading="lazy" class="w-8 h-8 object-contain shrink-0" :class="!item.img && 'no-img'" @error="$store.wf.noImg($event)" />
-              <span class="text-sm truncate" x-text="$store.wf.nm(item.name)"></span>
+        <div class="wf-item" :class="{ sel: $store.wf.someSel(item), open: $store.wf.open[item.name] || $store.wf.filter.length > 1 }">
+          <div class="item-row">
+            <button @click="$store.wf.open[item.name] = !$store.wf.open[item.name]" class="item-main">
+              <span class="tile"><img :src="item.img ? $store.wf.img(item.img) : 'media/lotus.png'" alt="" loading="lazy" :class="!item.img && 'no-img'" @error="$store.wf.noImg($event)" /></span>
+              <span class="item-name" x-text="$store.wf.nm(item.name)"></span>
+              <span class="item-count" x-show="$store.wf.someSel(item)" x-text="item.parts.filter(p => $store.wf.isSel(item.pre, p.name)).length + '/' + item.parts.length"></span>
             </button>
-            <button @click="$store.wf.toggleSet(item)" class="wf-chip" :class="$store.wf.allSel(item) && 'on'" x-text="$store.wf.t('full_set')"></button>
+            <button @click="$store.wf.toggleSet(item)" class="check" :class="$store.wf.allSel(item) && 'on'" :title="$store.wf.t('full_set')" :aria-label="$store.wf.t('full_set')"><i></i></button>
           </div>
-          <div x-show="$store.wf.open[item.name] || $store.wf.filter.length > 1" class="px-3 pb-2 pl-[52px] flex flex-wrap gap-1">
+          <div x-show="$store.wf.open[item.name] || $store.wf.filter.length > 1" class="part-list">
             <template x-for="p in item.parts" :key="p.name">
-              <button @click="$store.wf.toggle(item.pre, p.name)" class="wf-chip" :class="$store.wf.isSel(item.pre, p.name) && 'on'" x-text="$store.wf.partShort(item.name, p)"></button>
+              <button @click="$store.wf.toggle(item.pre, p.name)" class="part-opt" :class="$store.wf.isSel(item.pre, p.name) && 'on'"><i></i><span x-text="$store.wf.partShort(item.name, p)"></span></button>
             </template>
           </div>
         </div>
@@ -169,7 +169,7 @@
     </div>
 
     <div class="spots">
-      <div class="wf-head pt-3">
+      <div class="wf-head">
         <h3 x-text="$store.wf.t('best_spots')"></h3>
         <span class="text-[11px] text-dim" x-show="$store.wf.selList.length" x-text="$store.wf.t('selected') + ' ' + $store.wf.selList.length"></span>
       </div>
@@ -178,7 +178,7 @@
         <div x-show="!$store.wf.selList.length" class="px-2 text-xs text-dim" x-text="$store.wf.t('nothing_sel')"></div>
         <template x-for="(h, i) in $store.wf.ranking" :key="h.node.key">
           <button @click="$store.wf.openPlanet(h.node.p, h.node.key)" class="wf-row">
-            <span class="wf-rank" x-text="i + 1"></span>
+            <span class="wf-rank" x-text="String(i + 1).padStart(2, '0')"></span>
             <span class="flex-1 min-w-0">
               <span class="block text-sm truncate"><span x-text="$store.wf.nodeLabel(h.node)"></span> <span class="text-dim text-xs" x-text="'· ' + $store.wf.planetName(h.node.p)"></span></span>
               <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(h.node.t) + (h.rot ? ' · ' + $store.wf.rotName(h.rot) : '') + ' · ' + h.lines.map(l => $store.wf.nm(l.name).replace(/ Relic.*$/, '')).join(', ')"></span>
@@ -207,10 +207,10 @@
               <div x-show="g.rot" class="wf-sub" x-text="$store.wf.rotName(g.rot)"></div>
               <template x-for="r in g.rows" :key="r.it.name">
                 <div class="drop-row" :class="$store.wf.isWanted($store.wf.pinnedNode(), r.it) && 'want'">
-                  <img :src="$store.wf.itemImg(r.it)" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
+                  <span class="tile"><img :src="$store.wf.itemImg(r.it)" alt="" loading="lazy" onerror="this.style.visibility='hidden'" /></span>
                   <span class="flex-1 min-w-0">
                     <span class="block truncate text-sm" x-text="(r.qty ? r.qty + ' ' : '') + $store.wf.nm(r.it.name)"></span>
-                    <span class="block text-[10px] uppercase tracking-wider" :style="'color:' + $store.wf.kindColor(r.it.kind)" x-text="$store.wf.kindName(r.it.kind)"></span>
+                    <span class="kind-label" :style="'color:' + $store.wf.kindColor(r.it.kind)" x-text="$store.wf.kindName(r.it.kind)"></span>
                   </span>
                   <span class="wf-pct text-dim" x-text="$store.wf.fmt(r.ch)"></span>
                 </div>
@@ -264,12 +264,10 @@
           <template x-for="g in $store.wf.viewLoot().frames" :key="g.name">
             <div class="loot-frame" :class="$store.wf.lootOpen[g.name] && 'open'">
               <button class="wf-row px-4 items-center" @click="$store.wf.lootOpen[g.name] = !$store.wf.lootOpen[g.name]">
-                <img :src="g.img ? $store.wf.img(g.img) : 'media/lotus.png'" alt="" class="loot-portrait" :class="!g.img && 'no-img'" @error="$store.wf.noImg($event)" />
+                <span class="tile tile-lg"><img :src="g.img ? $store.wf.img(g.img) : 'media/lotus.png'" alt="" :class="!g.img && 'no-img'" @error="$store.wf.noImg($event)" /></span>
                 <span class="flex-1 min-w-0">
                   <span class="block text-sm truncate" x-text="$store.wf.nm(g.name)"></span>
-                  <span class="loot-parts">
-                    <template x-for="x in g.parts" :key="x.it.name"><i x-text="$store.wf.partLabel(g.name, x)"></i></template>
-                  </span>
+                  <span class="loot-parts" x-text="g.parts.map(x => $store.wf.partLabel(g.name, x)).join(' · ')"></span>
                 </span>
                 <span class="wf-pct" :class="g.parts.length >= g.total ? 'text-gold' : 'text-dim'" x-text="g.parts.length + '/' + g.total"></span>
               </button>
@@ -281,28 +279,30 @@
                     <em x-text="$store.wf.fmt(x.ch)"></em>
                   </button>
                 </template>
-                <button x-show="g.set" class="wf-chip ml-4 mt-1" :class="g.set && $store.wf.allSel({ ...g.set, pre: 'a:' }) && 'on'" @click="$store.wf.planFrame(g)" x-text="$store.wf.t('full_set') + ' → ' + $store.wf.t('planner_short')"></button>
+                <button x-show="g.set" class="text-btn" :class="g.set && $store.wf.allSel({ ...g.set, pre: 'a:' }) && 'on'" @click="$store.wf.planFrame(g)"><i></i><span x-text="$store.wf.t('full_set') + ' → ' + $store.wf.t('planner_short')"></span></button>
               </div>
             </div>
           </template>
 
           <div x-show="$store.wf.viewLoot().relics.length" class="wf-sub px-4 pt-3" x-text="$store.wf.t('relics')"></div>
           <template x-for="r in $store.wf.viewLoot().relics" :key="r.tier">
-            <div class="px-4 py-1 flex flex-wrap gap-1 items-center">
+            <div class="relic-line">
               <span class="loot-tier" x-text="$store.wf.tierName(r.tier)"></span>
-              <template x-for="x in r.list" :key="x.it.name">
-                <button class="wf-chip" @click="$store.wf.setFocus(x.it.name)" x-text="$store.wf.nm(x.it.name).replace(/^(Реликвия|Relic) /, '').replace(/ Relic$/, '')"></button>
-              </template>
+              <span class="relic-codes">
+                <template x-for="x in r.list" :key="x.it.name">
+                  <button class="code" :class="$store.wf.focus === x.it.name && 'on'" @click="$store.wf.setFocus(x.it.name)" x-text="$store.wf.nm(x.it.name).replace(/^(Реликвия|Relic) /, '').replace(/ Relic$/, '').replace(/^(Lith|Meso|Neo|Axi|Requiem|Лит|Мезо|Нео|Акси|Реквием) /, '')"></button>
+                </template>
+              </span>
             </div>
           </template>
 
           <div x-show="$store.wf.viewLoot().gear.length" class="wf-sub px-4 pt-3" x-text="$store.wf.t('loot_gear')"></div>
           <template x-for="g in $store.wf.viewLoot().gear" :key="g.name">
-            <div class="px-4 py-1">
-              <div class="text-sm" x-text="$store.wf.nm(g.name)"></div>
-              <div class="flex flex-wrap gap-1 mt-1">
+            <div class="gear">
+              <div class="gear-name" x-text="$store.wf.nm(g.name)"></div>
+              <div class="gear-parts">
                 <template x-for="x in g.parts" :key="x.it.name">
-                  <button class="wf-chip" @click="$store.wf.pin(x.node.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(x.node))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()" x-text="$store.wf.partLabel(g.name, x) + ' · ' + $store.wf.fmt(x.ch)"></button>
+                  <button class="part-link" @click="$store.wf.pin(x.node.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(x.node))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()"><span x-text="$store.wf.partLabel(g.name, x)"></span><em x-text="$store.wf.fmt(x.ch)"></em></button>
                 </template>
               </div>
             </div>
@@ -313,10 +313,10 @@
       <div x-show="$store.wf.q.length >= 2" class="wf-scroll max-h-[42%] border-y border-line/60">
         <template x-for="e in $store.wf.results()" :key="e.kind + e.name">
           <button @click="$store.wf.pick(e)" class="wf-row px-3" :class="$store.wf.focus === e.name && 'on'">
-            <img :src="e.img" alt="" loading="lazy" class="w-8 h-8 object-contain shrink-0" onerror="this.style.visibility='hidden'" />
+            <span class="tile"><img :src="e.img" alt="" loading="lazy" onerror="this.style.visibility='hidden'" /></span>
             <span class="flex-1 min-w-0">
               <span class="block text-sm truncate" x-text="$store.wf.nm(e.name)"></span>
-              <span class="block text-[10px] uppercase tracking-wider" :style="'color:' + $store.wf.kindColor(e.kind)" x-text="$store.wf.kindName(e.kind) + (e.kind === 'prime' ? ' · ' + ($store.wf.isSel('p:', e.name) ? $store.wf.t('in_plan') : $store.wf.t('add_plan')) : '')"></span>
+              <span class="kind-label" :style="'color:' + $store.wf.kindColor(e.kind)" x-text="$store.wf.kindName(e.kind) + (e.kind === 'prime' ? ' · ' + ($store.wf.isSel('p:', e.name) ? $store.wf.t('in_plan') : $store.wf.t('add_plan')) : '')"></span>
             </span>
           </button>
         </template>
@@ -351,9 +351,9 @@
   </aside>
 
   <div class="zoom" x-show="$store.wf.loaded" x-cloak>
-    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: 1 }))" aria-label="Zoom in">+</button>
-    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: -1 }))" aria-label="Zoom out">−</button>
-    <button class="wf-btn" @click="window.dispatchEvent(new CustomEvent('atlas:home'))" :aria-label="$store.wf.t('origin')">⌂</button>
+    <button @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: 1 }))" aria-label="Zoom in"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    <button @click="window.dispatchEvent(new CustomEvent('atlas:zoom', { detail: -1 }))" aria-label="Zoom out"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    <button @click="window.dispatchEvent(new CustomEvent('atlas:home'))" :aria-label="$store.wf.t('origin')"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 1v3.2M8 11.8V15M1 8h3.2M11.8 8H15" stroke="currentColor" stroke-width="1.2"/></svg></button>
   </div>
 
   <div x-show="$store.wf.tip.show" x-cloak class="map-tip" :style="'left:' + $store.wf.tip.x + 'px;top:' + $store.wf.tip.y + 'px'" x-html="$store.wf.tip.html"></div>
