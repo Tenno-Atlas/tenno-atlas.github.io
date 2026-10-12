@@ -340,3 +340,7 @@ body.in-card #chart-labels { opacity: 0; }
 body.in-card .zoom { display: none; }
 .world-card .dc-name { bottom: 21px; font-size: 13px; letter-spacing: 0.28em; }
 .world-card .dc-sub { bottom: 7px; }
+@media (max-width: 1023px) {
+  .world-card .dc-name { font-size: 9px; letter-spacing: 0.12em; bottom: 7px; left: 7px; right: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .world-card .dc-sub { display: none; }
+}

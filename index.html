@@ -70,7 +70,7 @@
         <template x-for="n in $store.wf.nodesOf($store.wf.view)" :key="n.key">
           <button type="button" class="dv-node" :class="{ plan: $store.wf.planHits.has(n.key), find: !$store.wf.planHits.has(n.key) && $store.wf.findHits.has(n.key), pinned: $store.wf.pinned === n.key }"
             @click="$store.wf.pin(n.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(n))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()">
-            <i></i><span class="dv-n" x-text="$store.wf.nodeLabel(n)"></span><span class="dv-t" x-text="$store.wf.nodeSub(n)"></span>
+            <i></i><span class="dv-n" x-text="$store.wf.worldLabel(n)"></span><span class="dv-t" x-text="$store.wf.worldSub(n)"></span>
           </button>
         </template>
       </div>

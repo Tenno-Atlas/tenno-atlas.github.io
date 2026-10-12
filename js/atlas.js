@@ -500,6 +500,8 @@
         { p: 'Höllvania', img: 'media/hollvania.jpg', tag: 'hollvania_tag' },
         { p: 'Sanctuary', img: 'media/sanctuary.jpg', tag: 'sanctuary_tag' },
       ],
+      worldLabel(n) { const h = n.hk && this.hubMap.get(n.hk); return h && n.lvl ? this.hubName(h) + ' · ' + n.lvl : this.nodeLabel(n); },
+      worldSub(n) { const lab = this.worldLabel(n).toLowerCase(), ty = this.typeName(n.t); const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key); return [ty && !lab.includes(ty.toLowerCase()) ? ty : '', ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''].filter(Boolean).join(' · '); },
       world() { return this.WORLDS.find((w) => w.p === this.view) || null; },
       planetHit(p) { return { plan: this.planPlanets[p] || null, find: !!this.findPlanets[p] || [...this.findHits.values()].some((h) => h.node.p === p) }; },
       anyHi() { return !!(this.planHits.size || this.findHits.size || Object.keys(this.findPlanets).length); },
