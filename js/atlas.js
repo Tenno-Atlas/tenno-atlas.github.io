@@ -20,7 +20,7 @@
      
       loot_frames: 'Warframes to build', loot_none: 'No warframe parts drop here.', loot_gear: 'Weapons & gear', click_hint_hub: 'Click to open the list', bonus: 'Bonus', missions: 'missions', hub_hint: 'Hover a mission to see its drops, click to pin it.',
       kind: { relic: 'Relic', frame: 'Warframe part', gear: 'Weapon / gear', resource: 'Resource', currency: 'Credits / Endo', other: 'Mods & other', prime: 'Prime part' },
-      tool_farm: 'Farm', tool_find: 'Search', tool_live: 'Now', where_farm: 'Where to farm', show_all: 'Show all', back_pick: 'Back to the list',
+      tool_farm: 'Farm', tool_find: 'Search', tool_live: 'Now', reset_all: 'Reset all', task: 'Task', ally: 'Ally', where_farm: 'Where to farm', show_all: 'Show all', back_pick: 'Back to the list',
       cycles: 'Time of day', bounties: 'Syndicate bounties', new_in: 'New in', live_err: 'Live data is unavailable right now', live_hint: 'Updates by itself when a cycle or bounty rotation ends.',
       late_toggle: 'Late game', planet_btn: 'Planet', rep: 'standing', now_here: 'Now', reward_pool: 'Rewards', open_hub: 'Drop tables',
       cyc: { day: 'Day', night: 'Night', warm: 'Warm', cold: 'Cold', fass: 'Fass', vome: 'Vome', grineer: 'Grineer', corpus: 'Corpus', joy: 'Joy', anger: 'Anger', envy: 'Envy', sorrow: 'Sorrow', fear: 'Fear' },
@@ -44,7 +44,7 @@
      
       loot_frames: 'Варфреймы для сборки', loot_none: 'Здесь не падают части варфреймов.', loot_gear: 'Оружие и снаряжение', click_hint_hub: 'Нажми, чтобы открыть список', bonus: 'Бонус', missions: 'миссий', hub_hint: 'Наведи на миссию, чтобы увидеть дроп, нажми — чтобы закрепить.',
       kind: { relic: 'Реликвия', frame: 'Часть варфрейма', gear: 'Оружие / снаряжение', resource: 'Ресурс', currency: 'Кредиты / Эндо', other: 'Моды и прочее', prime: 'Прайм-деталь' },
-      tool_farm: 'Фарм', tool_find: 'Поиск', tool_live: 'Сейчас', where_farm: 'Где фармить', show_all: 'Показать все', back_pick: 'К списку',
+      tool_farm: 'Фарм', tool_find: 'Поиск', tool_live: 'Сейчас', reset_all: 'Сбросить всё', task: 'Задача', ally: 'Союзник', where_farm: 'Где фармить', show_all: 'Показать все', back_pick: 'К списку',
       cycles: 'Время суток', bounties: 'Задания синдикатов', new_in: 'Новые через', live_err: 'Живые данные сейчас недоступны', live_hint: 'Обновляется само, когда меняется цикл или задания.',
       late_toggle: 'Поздняя игра', planet_btn: 'Планета', rep: 'репутации', now_here: 'Сейчас', reward_pool: 'Награды', open_hub: 'Таблицы дропа',
       cyc: { day: 'День', night: 'Ночь', warm: 'Тепло', cold: 'Холод', fass: 'Фэз', vome: 'Воум', grineer: 'Гринир', corpus: 'Корпус', joy: 'Радость', anger: 'Гнев', envy: 'Зависть', sorrow: 'Печаль', fear: 'Страх' },
@@ -68,7 +68,13 @@
     'Shrine Defense': 'Оборона святыни', Pursuit: 'Преследование', Rush: 'Рывок', Normal: 'Обычный', Hard: 'Сложный',
   };
 
-  const NODE_RU = { 'Sanctuary Onslaught': 'Резня в Святилище', 'Elite Sanctuary Onslaught': 'Элитная резня в Святилище' };
+  const NODE_RU = { 'Sanctuary Onslaught': 'Резня в Святилище', 'Elite Sanctuary Onslaught': 'Элитная резня в Святилище', 'The Circuit': 'Цепь' };
+  const SHORT_RU = {
+    'Cetus Bounty': 'Баунти Цетуса', 'Orb Vallis Bounty': 'Баунти Долины Сфер', 'Cambion Drift Bounty': 'Баунти Камбионского Дрейфа',
+    'Isolation Vault': 'Камера Изоляции', 'Arcana Isolation Vault': 'Камера Изоляции (мистификаторы)', 'Zariman Bounty': 'Баунти Заримана',
+    'Entrati Lab Bounty': 'Баунти лаборатории', 'WF1999 Bounty': 'Баунти Гекса', 'Ghoul Bounty': 'Охота на гулей', 'Plague Star': 'Чумная звезда',
+  };
+  const GENERIC_BOUNTY = /^(Cetus|Orb Vallis|Cambion Drift|Zariman|Entrati Lab|WF1999) Bounty$/;
   const HUB_ORDER = ['cetus', 'fortuna', 'necralisk', 'sanctum', 'chrysalith', 'hex', 'bounty', 'perita', 'recall', 'railjack'];
   const HUB_TEXT = {
     en: {
@@ -134,6 +140,11 @@
     { id: 'chrysalith', bc: 'ZarimanSyndicate', p: 'Zariman', name: ['The Holdfasts', 'Неукротимые'] },
     { id: 'hex', bc: 'HexSyndicate', p: 'Höllvania', name: ['The Hex', 'Гекс'] },
   ];
+  const NEXT_STATE = { day: 'night', night: 'day', warm: 'cold', cold: 'warm', fass: 'vome', vome: 'fass', joy: 'anger', anger: 'envy', envy: 'sorrow', sorrow: 'fear', fear: 'joy' };
+  const STATE_LEN = {
+    earth: { day: 14400, night: 14400 }, cetus: { day: 6000, night: 3000 }, vallis: { cold: 1200, warm: 400 }, cambion: { fass: 6000, vome: 3000 },
+    duviri: { joy: 7200, anger: 7200, envy: 7200, sorrow: 7200, fear: 7200 },
+  };
   const ALLY = { AmirAllyAgent: 'Amir', AoiAllyAgent: 'Aoi', ArthurAllyAgent: 'Arthur', EleanorAllyAgent: 'Eleanor', LettieAllyAgent: 'Lettie', QuincyAllyAgent: 'Quincy' };
   const HEX_PLAIN = ['SolNode850', 'SolNode853', 'SolNode854', 'SolNode856'];
 
@@ -173,6 +184,7 @@
           const get = (u) => fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(u + ' HTTP ' + r.status); return r.json(); });
           const [A, P, RU, W] = await Promise.all([get('data/atlas.json'), get('data/primes.json'), get('data/ru.json').catch(() => ({})), get('data/world.json').catch(() => null)]);
           if (W) this.W = W;
+          this._nodeRu = null;
           const changed = this.generatedAt && this.generatedAt !== A.generatedAt;
           A.nodes = prepNodes(A.nodes);
           this.A = A; this.P = P; this.RU = RU; this._ruLc = null; this.generatedAt = A.generatedAt; this.loadedAt = Date.now();
@@ -245,7 +257,26 @@
         });
         return { plan, find };
       },
-      nodeLabel(n) { if (!n.hk) return this.lang === 'ru' && NODE_RU[n.n] || n.n; const h = this.hubMap.get(n.hk); return (h ? this.hubName(h) + ' · ' : '') + (n.lvl ? n.lvl + ' ' : '') + n.short; },
+      nodeRu(en) {
+        if (!this._nodeRu) { this._nodeRu = new Map(Object.entries(NODE_RU)); for (const v of Object.values(this.W.nodes || {})) if (v[0] && v[1] && !this._nodeRu.has(v[0])) this._nodeRu.set(v[0], v[1]); }
+        return this._nodeRu.get(en) || '';
+      },
+      shortName(n) {
+        const s = n.short;
+        if (this.lang !== 'ru') return s.replace('WF1999 Bounty', 'Hex Bounty');
+        if (SHORT_RU[s]) return SHORT_RU[s];
+        let m = s.match(/^PROFIT-TAKER - PHASE (\d)(?: · (First|Subsequent))?/);
+        if (m) return 'Профит-Тейкер: этап ' + m[1] + (m[2] === 'First' ? ' · первое прохождение' : m[2] ? ' · повторно' : '');
+        m = s.match(/^Endless: (?:Tier (\d+)|Repeated Rewards)$/);
+        if (m) return 'Бесконечный режим: ' + (m[1] ? 'круг ' + m[1] : 'повторные награды');
+        return this.nodeRu(s) || s;
+      },
+      nodeName(n) { return n.hk ? this.nodeLabel(n) : this.shortName(n); },
+      nodeLabel(n) {
+        if (!n.hk) return this.shortName(n);
+        const h = this.hubMap.get(n.hk);
+        return [h ? this.hubName(h) : '', [n.lvl, GENERIC_BOUNTY.test(n.short) ? '' : this.shortName(n)].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+      },
       pinnedHub() { return this.hub ? this.hubMap.get(this.hub) || null : null; },
       openHub(key) {
         this.hub = key; this.pinned = null; this.hideTip();
@@ -266,7 +297,7 @@
         if (hit.find) s += `<div class="tip-find">● ${esc(this.nm(this.focus))}: ${this.fmt(hit.find)}</div>`;
         for (const n of h.nodes.slice(0, 14)) {
           const ph = this.planHits.get(n.key), fh = this.findHits.get(n.key);
-          s += `<div class="tip-row${ph || fh ? ' want' : ''}"><i style="background:${ph ? '#e3b45e' : fh ? '#7fd0e6' : '#5d6f7b'}"></i><b>${n.lvl ? esc(n.lvl) + ' · ' : ''}${esc(n.short)}</b><em>${ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''}</em></div>`;
+          s += `<div class="tip-row${ph || fh ? ' want' : ''}"><i style="background:${ph ? '#e3b45e' : fh ? '#7fd0e6' : '#5d6f7b'}"></i><b>${n.lvl ? esc(n.lvl) + ' · ' : ''}${esc(this.shortName(n))}</b><em>${ph ? this.fmt(ph.eff) : fh ? this.fmt(fh.eff) : ''}</em></div>`;
         }
         if (h.nodes.length > 14) s += `<div class="tip-more">+${h.nodes.length - 14} ${esc(this.t('more'))}</div>`;
         s += `<div class="tip-foot">${esc(this.t('click_hint_hub'))}</div>`;
@@ -518,7 +549,7 @@
         return h;
       },
       nodeTip(nd) {
-        let h = `<div class="tip-h">${esc(nd.n)}<span>${esc(this.typeName(nd.t))}</span></div>`;
+        let h = `<div class="tip-h">${esc(this.nodeName(nd))}<span>${esc(this.typeName(nd.t))}</span></div>`;
         for (const g of this.nodeGroups(nd, 9)) {
           if (g.rot) h += `<div class="tip-s">${esc(this.rotName(g.rot))}</div>`;
           for (const r of g.rows) {
@@ -531,6 +562,13 @@
       },
 
       pinnedNode() { return this.pinned ? this.nodeByKey.get(this.pinned) : null; },
+      anyActive() { return !!(this.selList.length || this.focus || this.q || this.filter || this.view); },
+      resetAll() {
+        this.sel = {}; this.open = {}; this.q = ''; this.filter = '';
+        this.saveSel();
+        this.setFocus(null);
+        if (this.view) this.closePlanet();
+      },
       setTool(t) {
         if (window.innerWidth < 1024 && this.panel === 'left' && this.tool === t) { this.panel = null; return; }
         this.tool = t; lsSet('wf_tool', t);
@@ -575,7 +613,10 @@
             const st = bc.zarimanFaction === 'FC_GRINEER' ? 'grineer' : 'corpus';
             return { id: c.id, p: c.p, place: T.place[c.id], state: st, label: T.cyc[st], expiry: bc.expiry };
           }
-          return { id: c.id, p: c.p, place: T.place[c.id], state: v.state, label: T.cyc[v.state] || v.state, expiry: Date.parse(v.expiry) };
+          let state = v.state, expiry = Date.parse(v.expiry);
+          const len = STATE_LEN[c.id];
+          for (let k = 0; len && NEXT_STATE[state] && expiry <= this.now && k < 50; k++) { state = NEXT_STATE[state]; expiry += (len[state] || 0) * 1000; }
+          return { id: c.id, p: c.p, place: T.place[c.id], state, label: T.cyc[state] || state, expiry };
         });
       },
       cycleOf(p) { return this.cycles().filter((c) => c.p === p && c.id !== 'cetus'); },
@@ -606,25 +647,27 @@
                 title: ru ? this.W.jobs[jb.type] || jb.type : jb.type,
                 lvl: (jb.enemyLevels || []).join('–'),
                 rep: (jb.standingStages || []).reduce((a, b) => a + b, 0),
-                sub: '',
+                notes: [],
                 rewards: [...new Set(jb.rewardPool || [])].map((r) => this.reward(r)),
               }));
             }
           } else if (bc && bc.bounties && bc.bounties[s.bc]) {
+            const tiers = hub ? hub.nodes.filter((n) => n.lv) : [];
             expiry = bc.expiry;
             if (s.bc === 'ZarimanSyndicate' && bc.zarimanFaction) note = I18N[this.lang].cyc[bc.zarimanFaction === 'FC_GRINEER' ? 'grineer' : 'corpus'];
-            jobs = bc.bounties[s.bc].map((b) => {
-              const c = this.W.ch[b.challenge], n = this.W.nodes[b.node];
+            jobs = bc.bounties[s.bc].map((b, i) => {
+              const c = this.W.ch[b.challenge], n = this.W.nodes[b.node], tier = tiers[i];
               const node = n ? (ru ? n[1] : n[0]) : b.node;
               const mt = n && !HEX_PLAIN.includes(b.node) ? (ru ? n[3] : n[2]) : '';
               const ally = b.ally ? ALLY[b.ally.split('/').pop()] : '';
               const allyName = ally ? (ru ? this.W.allies[ally] || ally : ally) : '';
+              const drops = tier ? Object.values(tier.r).flat().sort((x, y) => y[1] - x[1]).map(([k, , q]) => (q ? q + ' ' : '') + this.nm(this.A.items[k].name)) : [];
               return {
-                title: c ? (ru ? c[1] : c[0]) : b.challenge.split('/').pop(),
-                lvl: '',
+                title: node + (mt ? ' · ' + mt : ''),
+                lvl: tier ? tier.lvl : '',
                 rep: 0,
-                sub: [node + (mt ? ' · ' + mt.toLowerCase() : ''), allyName].filter(Boolean).join(' · '),
-                rewards: [],
+                notes: [c ? [this.t('task'), ru ? c[1] : c[0]] : null, allyName ? [this.t('ally'), allyName] : null].filter(Boolean),
+                rewards: [...new Set(drops)],
               };
             });
           }

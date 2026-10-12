@@ -1104,7 +1104,7 @@ function start() {
         return;
       }
       const ph = s.planHits.get(m.node.key), fh = s.findHits.get(m.node.key);
-      m.el.querySelector('.nm-name').textContent = m.node.n;
+      m.el.querySelector('.nm-name').textContent = s.nodeName(m.node);
       m.el.querySelector('.nm-sub').textContent = [s.typeName(m.node.t), ph ? s.fmt(ph.eff) : '', !ph && fh ? s.fmt(fh.eff) : ''].filter(Boolean).join(' · ');
       m.el.classList.toggle('plan', !!ph);
       m.el.classList.toggle('find', !ph && !!fh);

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://cdn.warframestat.us" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Saira+Semi+Condensed:wght@400;500;600;700&family=Saira:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..800&family=Exo+2:wght@300..700&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
@@ -27,8 +27,8 @@
             gold: '#e3b45e', cyan: '#7fd0e6', danger: '#e8455c',
           },
           fontFamily: {
-            sans: ['Saira', 'system-ui', 'sans-serif'],
-            cond: ['"Saira Semi Condensed"', 'Saira', 'sans-serif'],
+            sans: ['"Exo 2"', 'system-ui', 'sans-serif'],
+            cond: ['Tektur', '"Exo 2"', 'sans-serif'],
           },
         },
       },
@@ -99,6 +99,7 @@
           <button @click="$store.wf.setTool(k)" :class="$store.wf.panel === 'left' && $store.wf.tool === k && 'on'" x-text="$store.wf.t('tool_' + k)"></button>
         </template>
       </nav>
+      <button class="reset-all hidden lg:inline-flex" x-show="$store.wf.anyActive()" x-cloak @click="$store.wf.resetAll()"><i></i><span x-text="$store.wf.t('reset_all')"></span></button>
       <button class="late-toggle hidden md:inline-flex" @click="$store.wf.toggleMode()" :class="$store.wf.mode === 'late' && 'on'" :title="$store.wf.t('mode_hint')"><i></i><span x-text="$store.wf.t('late_toggle')"></span></button>
       <button data-lang-toggle @click="$store.wf.toggleLang()" class="lang-toggle" aria-label="Language">
         <span :class="$store.wf.lang==='en' && 'on'">EN</span><span :class="$store.wf.lang==='ru' && 'on'">RU</span>
@@ -156,6 +157,7 @@
         <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10 5.5V10l3 2" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
         <span x-text="$store.wf.t('tool_live')"></span><i class="live-dot" x-show="$store.wf.live.ok && !$store.wf.live.failed"></i>
       </button>
+      <button class="reset-all lg:hidden" x-show="$store.wf.anyActive()" @click="$store.wf.resetAll()"><i></i><span x-text="$store.wf.t('reset_all')"></span></button>
       <button class="wf-close lg:hidden ml-auto" @click="$store.wf.panel=null" :aria-label="$store.wf.t('close')">×</button>
     </div>
 
@@ -285,7 +287,7 @@
                   <span class="job-lvl" x-text="j.lvl || String(i + 1).padStart(2, '0')"></span>
                   <span class="job-main">
                     <span class="job-title" x-text="j.title"></span>
-                    <span class="job-sub" x-show="j.sub" x-text="j.sub"></span>
+                    <template x-for="nt in j.notes" :key="nt[0]"><span class="job-sub"><em x-text="nt[0]"></em><span x-text="nt[1]"></span></span></template>
                     <span class="job-rw" x-show="j.rewards.length" x-text="j.rewards.join(' · ')"></span>
                   </span>
                   <span class="job-rep" x-show="j.rep" x-text="'+' + j.rep"></span>
@@ -306,7 +308,7 @@
         <div class="wf-head items-start">
           <div class="flex-1 min-w-0">
             <h2 x-text="$store.wf.t('node_details')"></h2>
-            <div class="node-title" x-text="$store.wf.pinnedNode().n"></div>
+            <div class="node-title" x-text="$store.wf.nodeName($store.wf.pinnedNode())"></div>
             <div class="text-xs text-dim" x-text="$store.wf.planetName($store.wf.pinnedNode().p) + ' · ' + ($store.wf.typeName($store.wf.pinnedNode().t) || '—')"></div>
           </div>
           <button @click="$store.wf.pinned = null; $store.wf.emit()" class="wf-close" :aria-label="$store.wf.t('close')">×</button>
@@ -353,7 +355,7 @@
                   <span class="job-lvl" x-text="j.lvl || String(i + 1).padStart(2, '0')"></span>
                   <span class="job-main">
                     <span class="job-title" x-text="j.title"></span>
-                    <span class="job-sub" x-show="j.sub" x-text="j.sub"></span>
+                    <template x-for="nt in j.notes" :key="nt[0]"><span class="job-sub"><em x-text="nt[0]"></em><span x-text="nt[1]"></span></span></template>
                     <span class="job-rw" x-show="j.rewards.length" x-text="j.rewards.join(' · ')"></span>
                   </span>
                   <span class="job-rep" x-show="j.rep" x-text="'+' + j.rep"></span>
@@ -367,7 +369,7 @@
             <button @click="$store.wf.pin(n.key)" @mouseenter="$store.wf.showTip($event, $store.wf.nodeTip(n))" @mousemove="$store.wf.moveTip($event)" @mouseleave="$store.wf.hideTip()" class="wf-row px-4">
               <span x-show="n.lvl" class="hub-lvl" x-text="n.lvl"></span>
               <span class="flex-1 min-w-0">
-                <span class="block text-sm truncate" x-text="n.short"></span>
+                <span class="block text-sm truncate" x-text="$store.wf.shortName(n)"></span>
                 <span class="block text-[11px] text-dim truncate" x-text="$store.wf.typeName(n.t)"></span>
               </span>
               <span class="wf-pct" :class="$store.wf.planHits.get(n.key) ? 'text-gold' : 'text-cyan'" x-text="$store.wf.planHits.get(n.key) ? $store.wf.fmt($store.wf.planHits.get(n.key).eff) : $store.wf.findHits.get(n.key) ? $store.wf.fmt($store.wf.findHits.get(n.key).eff) : ''"></span>

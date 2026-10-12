@@ -16,13 +16,13 @@
   --cyan: #86d3e3;
   --danger: #e8455c;
   --top: 56px;
-  --ui: "Saira Semi Condensed", "Saira", sans-serif;
-  --body: "Saira", system-ui, sans-serif;
-  --display: "Cinzel", serif;
+  --ui: "Tektur", "Exo 2", sans-serif;
+  --body: "Exo 2", system-ui, sans-serif;
+  --display: "Tektur", "Exo 2", sans-serif;
 }
 
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
-body { background: var(--bg); font-family: var(--body); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-variant-numeric: tabular-nums; }
+body { background: var(--bg); font-family: var(--body); font-variation-settings: "wdth" 86; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-variant-numeric: tabular-nums; }
 button { cursor: pointer; }
 :focus-visible { outline: 1px solid var(--gold); outline-offset: 2px; }
 
@@ -285,7 +285,7 @@ body:not(.in-planet) .node-mk { display: none; }
 .world-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); animation: dv-drift 26s ease-in-out infinite alternate; transition: filter 0.3s; filter: saturate(1.08) contrast(1.06) brightness(0.92); }
 .world-card:hover img { filter: saturate(1.15) contrast(1.08) brightness(1.08); }
 .world-card .dc-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(3, 4, 8, 0.94) 0%, rgba(3, 4, 8, 0.4) 46%, rgba(3, 4, 8, 0) 72%), linear-gradient(100deg, rgba(255, 196, 140, 0.14), rgba(0, 0, 0, 0) 55%); }
-.world-card .dc-name { position: absolute; left: 13px; bottom: 23px; font: 600 15px "Cinzel", serif; letter-spacing: 0.34em; text-transform: uppercase; color: #f6e7cd; text-shadow: 0 0 12px #000; }
+.world-card .dc-name { position: absolute; left: 13px; bottom: 23px; font: 700 15px var(--display); letter-spacing: 0.2em; text-transform: uppercase; color: #f6e7cd; text-shadow: 0 0 12px #000; }
 .world-card .dc-sub { position: absolute; left: 13px; bottom: 9px; font: 400 10px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: #b9a98f; }
 .world-card .dc-badge { position: absolute; z-index: 2; right: 8px; top: 8px; min-width: 20px; padding: 1px 6px; text-align: center; background: var(--gold); color: #1a1205; font: 700 11px var(--ui); }
 .world-card:hover { border-color: rgba(227, 180, 94, 0.75); box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6), 0 0 22px rgba(227, 180, 94, 0.18); }
@@ -317,7 +317,7 @@ body.in-card #chart-labels { opacity: 0; }
 @media (max-width: 559px) { .dv-nodes { grid-template-columns: minmax(0, 1fr); } }
 .dv-node { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; background: var(--panel); border: 1px solid var(--edge); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--txt); transition: border-color 0.15s, background 0.15s; }
 .dv-node i { flex: none; width: 9px; height: 9px; transform: rotate(45deg); background: #f2f6f8; border: 1.5px solid rgba(10, 18, 24, 0.85); }
-.dv-node .dv-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 12px "Cinzel", serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.dv-node .dv-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 12px var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
 .dv-node .dv-t { white-space: nowrap; font: 400 11px var(--ui); letter-spacing: 0.06em; color: var(--dim); }
 .dv-node:hover { border-color: var(--edge-hi); background: var(--panel-2); }
 .dv-node.plan { border-color: var(--gold); }
@@ -400,7 +400,7 @@ body.in-card .zoom { display: none; }
 .jobs .text-btn { margin-left: 16px; }
 .job { display: flex; gap: 11px; align-items: flex-start; padding: 6px 16px; }
 .job + .job { border-top: 1px solid rgba(236, 235, 230, 0.05); }
-.job-lvl { flex: none; min-width: 50px; padding: 1px 7px; font: 600 12px var(--ui); color: var(--gold); border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(220, 180, 106, 0.12), rgba(220, 180, 106, 0)); }
+.job-lvl { flex: none; min-width: 66px; padding: 1px 7px; font: 600 12px var(--ui); color: var(--gold); border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(220, 180, 106, 0.12), rgba(220, 180, 106, 0)); }
 .job-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .job-title { font: 600 12.5px var(--ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--txt); line-height: 1.35; }
 .job-sub { font: 400 12px var(--body); color: #c3c8cb; }
@@ -429,3 +429,15 @@ body.in-card .zoom { display: none; }
   .dock { padding: 8px 12px 0; margin-bottom: 8px; border-bottom: 0; }
   .dock > button:not(.wf-close) { display: none; }
 }
+
+.reset-all { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 11px; font: 600 12px var(--ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--txt); border: 1px solid rgba(232, 69, 92, 0.45); background: rgba(232, 69, 92, 0.08); transition: background 0.15s, border-color 0.15s; }
+.reset-all i { position: relative; width: 10px; height: 10px; }
+.reset-all i::before, .reset-all i::after { content: ""; position: absolute; left: 50%; top: -1px; width: 1.5px; height: 12px; background: var(--danger); transform: rotate(45deg); }
+.reset-all i::after { transform: rotate(-45deg); }
+.reset-all:hover { background: rgba(232, 69, 92, 0.2); border-color: var(--danger); }
+.dock .reset-all { align-self: center; height: 28px; }
+.job-sub { display: flex; gap: 6px; }
+.job-sub em { flex: none; font: 500 10.5px var(--ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); padding-top: 1px; }
+.wf-pct, .job-rep, .loot-line em, .part-link em, .map-tip .tip-row em, .item-count, .cyc-left, .synd-left > span, .hub-lvl, .job-lvl, .dock b, .pl-badge, .dc-badge { font-family: var(--body) !important; font-variant-numeric: tabular-nums; }
+@media (min-width: 1024px) { .dock > button.reset-all { display: none; } }
+@media (max-width: 1023px) { .hud-top .reset-all { display: none; } }
